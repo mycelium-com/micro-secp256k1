@@ -46,7 +46,8 @@ int main() {
     uint8_t public[64] = {0};
     uint8_t hash[32] = {0};
     uint8_t sig[64] = {0};
-    
+    uint8_t serialized[70] = {0};
+
     uint8_t tmp[2 * SHA256_DIGEST_LENGTH + SHA256_BLOCK_LENGTH];
     SHA256_HashContext ctx = {{
         &init_SHA256,
@@ -58,7 +59,7 @@ int main() {
     }};
 
     const struct uECC_Curve_t * curve = uECC_secp256k1();
-    
+
     printf("Testing 4096 signatures\n");
     for (i = 0; i < 4096; ++i) {
         printf(".");
@@ -75,7 +76,12 @@ int main() {
             return 1;
         }
 
+        // Normalize and serialize
         uECC_normalize_signature(sig, curve);
+        uECC_serialize_der(sig, serialized);
+
+        // Deserialize
+        uECC_deserialize_der(serialized, sig);
 
         if (!uECC_verify(public, hash, sizeof(hash), sig, curve)) {
             printf("uECC_verify() failed\n");

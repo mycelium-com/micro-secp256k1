@@ -2,6 +2,7 @@
 
 #include "uECC.h"
 #include "uECC_vli.h"
+#include <string.h>
 
 #ifndef uECC_RNG_MAX_TRIES
     #define uECC_RNG_MAX_TRIES 64
@@ -1291,6 +1292,27 @@ int uECC_sign_deterministic(const uint8_t *private_key,
 
 static bitcount_t smax(bitcount_t a, bitcount_t b) {
     return (a > b ? a : b);
+}
+
+void uECC_serialize_der(const uint8_t *signature, uint8_t *serialized) {
+    const unsigned char *rp = signature, *sp = signature + 32;
+    unsigned lenR = 32, lenS = 32;
+
+    serialized[0] = 0x30;
+    serialized[1] = 4 + lenS + lenR;
+    serialized[2] = 0x02;
+    serialized[3] = lenR;
+    memcpy(serialized+4, rp, lenR);
+    serialized[4+lenR] = 0x02;
+    serialized[5+lenR] = lenS;
+    memcpy(serialized+lenR+6, sp, lenS);
+}
+
+void uECC_deserialize_der(const uint8_t *serialized, uint8_t *deserialized) {
+    unsigned char *rp = deserialized, *sp = deserialized + 32;
+    unsigned lenR = 32, lenS = 32;
+    memcpy(rp, serialized+4, lenR);
+    memcpy(sp, serialized+lenR+6, lenS);
 }
 
 int uECC_verify(const uint8_t *public_key,
