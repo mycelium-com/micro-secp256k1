@@ -57,33 +57,32 @@ int main() {
         tmp
     }};
 
-    const struct uECC_Curve_t * curves[1];
-    curves[0] = uECC_secp256k1();
+    const struct uECC_Curve_t * curve = uECC_secp256k1();
     
     printf("Testing 4096 signatures\n");
-    for (c = 0; c < 1; ++c) {
-        for (i = 0; i < 4096; ++i) {
-            printf(".");
-            fflush(stdout);
+    for (i = 0; i < 4096; ++i) {
+        printf(".");
+        fflush(stdout);
 
-            if (!uECC_compute_public_key(private, public, curves[c])) {
-                printf("uECC_make_key() failed\n");
-                return 1;
-            }
-            memcpy(hash, public, sizeof(hash));
-            
-            if (!uECC_sign_deterministic(private, hash, sizeof(hash), &ctx.uECC, sig, curves[c])) {
-                printf("uECC_sign() failed\n");
-                return 1;
-            }
-
-            if (!uECC_verify(public, hash, sizeof(hash), sig, curves[c])) {
-                printf("uECC_verify() failed\n");
-                return 1;
-            }
+        if (!uECC_compute_public_key(private, public, curve)) {
+            printf("uECC_make_key() failed\n");
+            return 1;
         }
-        printf("\n");
+        memcpy(hash, public, sizeof(hash));
+
+        if (!uECC_sign_deterministic(private, hash, sizeof(hash), &ctx.uECC, sig, curve)) {
+            printf("uECC_sign() failed\n");
+            return 1;
+        }
+
+        uECC_normalize_signature(sig, curve);
+
+        if (!uECC_verify(public, hash, sizeof(hash), sig, curve)) {
+            printf("uECC_verify() failed\n");
+            return 1;
+        }
     }
+    printf("\n");
     
     return 0;
 }
