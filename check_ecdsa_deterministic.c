@@ -47,7 +47,9 @@ int main() {
     int i, c;
     uint8_t private[32] = {0xE9,0x87,0x3D,0x79,0xC6,0xD8,0x7D,0xC0,0xFB,0x6A,0x57,0x78,0x63,0x33,0x89,0xF4,0x45,0x32,0x13,0x30,0x3D,0xA6,0x1F,0x20,0xBD,0x67,0xFC,0x23,0x3A,0xA3,0x32,0x62};
     uint8_t public[65] = {0x04};
+    uint8_t public_c[33] = {0x00};
     const uint8_t *pp = &public[0];
+    const uint8_t *ppc = &public_c[0];
     uint8_t hash[32] = {0};
     uint8_t sig[64] = {0};
     uint8_t serialized[70] = {0};
@@ -72,9 +74,10 @@ int main() {
     memcpy(hash, public, sizeof(hash));
 
     if (!uECC_sign_deterministic(private, hash, sizeof(hash), &ctx.uECC, sig, curve)) {
-        printf("uECC_sign() failed\n");
+        printf("uECC_sign_deterministic() failed\n");
         return 1;
     }
+
 
     // Normalize and serialize
     uECC_normalize_signature(sig, curve);
@@ -99,6 +102,26 @@ int main() {
         printf("ECDSA_do_verify() failed\n");
         return 1;
     }
+
+    // Compressed pubkey
+    uECC_compress(public + 1, public_c, curve);
+    
+    EC_KEY *pkey_c = EC_KEY_new_by_curve_name(NID_secp256k1);
+    if (!pkey) {
+        printf("EC_KEY_new() failed\n");
+        return 1;
+    }
+
+    if (!o2i_ECPublicKey(&pkey_c, &ppc, sizeof(public_c))) {
+        printf("o2i_ECPublicKey() failed\n");
+        return 1;
+    }
+
+    if (!ECDSA_do_verify(hash, sizeof(hash), ossl_sig, pkey_c)) {
+        printf("ECDSA_do_verify() failed\n");
+        return 1;
+    }
+
 
     printf("PASS\n");
     return 0;
