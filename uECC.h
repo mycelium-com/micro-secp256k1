@@ -230,6 +230,9 @@ int uECC_verify(const uint8_t *public_key,
                 const uint8_t *signature,
                 uECC_Curve curve);
 
+// Apply Low-S rule to signature
+int uECC_normalize_signature(uint8_t *signature, uECC_Curve curve);
+
 #ifdef __cplusplus
 } /* end of extern "C" */
 #endif

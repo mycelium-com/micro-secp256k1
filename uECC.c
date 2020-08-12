@@ -101,6 +101,7 @@ struct uECC_Curve_t {
     bitcount_t num_n_bits;
     uECC_word_t p[uECC_MAX_WORDS];
     uECC_word_t n[uECC_MAX_WORDS];
+    uECC_word_t half_n[uECC_MAX_WORDS];
     uECC_word_t G[uECC_MAX_WORDS * 2];
     uECC_word_t b[uECC_MAX_WORDS];
     void (*double_jacobian)(uECC_word_t * X1,
@@ -1140,6 +1141,28 @@ static int uECC_sign_with_k(const uint8_t *private_key,
     uECC_vli_nativeToBytes(signature + curve->num_bytes, curve->num_bytes, s);
 #endif    
     return 1;
+}
+
+int uECC_normalize_signature(uint8_t *signature, uECC_Curve curve)
+{
+    uECC_word_t s[uECC_MAX_WORDS];
+#if uECC_VLI_NATIVE_LITTLE_ENDIAN
+    bcopy((uint8_t *) s, signature + curve->num_bytes, BITS_TO_BYTES(curve->num_n_bits));
+#else
+    uECC_vli_bytesToNative(s, signature + curve->num_bytes, BITS_TO_BYTES(curve->num_n_bits)); /* tmp = d */
+#endif
+
+    if (uECC_vli_cmp(s, curve->half_n, curve->num_words) == 1) {
+        uECC_vli_sub(s, curve->n, s, curve->num_words); /* s = n - s */
+#if uECC_VLI_NATIVE_LITTLE_ENDIAN
+        bcopy((uint8_t *) signature + curve->num_bytes, (uint8_t *) s, curve->num_bytes);
+#else
+        uECC_vli_nativeToBytes(signature + curve->num_bytes, curve->num_bytes, s);
+#endif
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 /* Compute an HMAC using K as a key (as in RFC 6979). Note that K is always
