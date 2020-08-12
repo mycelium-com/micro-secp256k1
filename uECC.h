@@ -234,10 +234,10 @@ int uECC_verify(const uint8_t *public_key,
 int uECC_normalize_signature(uint8_t *signature, uECC_Curve curve);
 
 // Serialize signature using the DER encoding
-void uECC_serialize_der(const uint8_t *signature, uint8_t *serialized);
+void uECC_serialize_der(const uint8_t *signature, uint8_t *serialized, uECC_Curve curve);
 
 // Deserialize DER encoded signature
-void uECC_deserialize_der(const uint8_t *serialized, uint8_t *deserialized);
+void uECC_deserialize_der(const uint8_t *serialized, uint8_t *deserialized, uECC_Curve curve);
 
 #ifdef __cplusplus
 } /* end of extern "C" */

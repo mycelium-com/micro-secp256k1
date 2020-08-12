@@ -78,10 +78,10 @@ int main() {
 
         // Normalize and serialize
         uECC_normalize_signature(sig, curve);
-        uECC_serialize_der(sig, serialized);
+        uECC_serialize_der(sig, serialized, curve);
 
         // Deserialize
-        uECC_deserialize_der(serialized, sig);
+        uECC_deserialize_der(serialized, sig, curve);
 
         if (!uECC_verify(public, hash, sizeof(hash), sig, curve)) {
             printf("uECC_verify() failed\n");

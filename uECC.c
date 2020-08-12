@@ -1294,9 +1294,9 @@ static bitcount_t smax(bitcount_t a, bitcount_t b) {
     return (a > b ? a : b);
 }
 
-void uECC_serialize_der(const uint8_t *signature, uint8_t *serialized) {
-    const unsigned char *rp = signature, *sp = signature + 32;
-    unsigned lenR = 32, lenS = 32;
+void uECC_serialize_der(const uint8_t *signature, uint8_t *serialized, uECC_Curve curve) {
+    const unsigned char *rp = signature, *sp = signature + curve->num_bytes;
+    unsigned lenR = curve->num_bytes, lenS = curve->num_bytes;
 
     serialized[0] = 0x30;
     serialized[1] = 4 + lenS + lenR;
@@ -1308,9 +1308,9 @@ void uECC_serialize_der(const uint8_t *signature, uint8_t *serialized) {
     memcpy(serialized+lenR+6, sp, lenS);
 }
 
-void uECC_deserialize_der(const uint8_t *serialized, uint8_t *deserialized) {
-    unsigned char *rp = deserialized, *sp = deserialized + 32;
-    unsigned lenR = 32, lenS = 32;
+void uECC_deserialize_der(const uint8_t *serialized, uint8_t *deserialized, uECC_Curve curve) {
+    unsigned char *rp = deserialized, *sp = deserialized + curve->num_bytes;
+    unsigned lenR = curve->num_bytes, lenS = curve->num_bytes;
     memcpy(rp, serialized+4, lenR);
     memcpy(sp, serialized+lenR+6, lenS);
 }

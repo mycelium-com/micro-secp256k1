@@ -81,7 +81,7 @@ int main() {
 
     // Normalize and serialize
     uECC_normalize_signature(sig, curve);
-    uECC_serialize_der(sig, serialized);
+    uECC_serialize_der(sig, serialized, curve);
 
     // Deserialize
     ECDSA_SIG *ossl_sig = ECDSA_SIG_new();
