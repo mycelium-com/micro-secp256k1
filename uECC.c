@@ -999,6 +999,88 @@ int uECC_valid_public_key(const uint8_t *public_key, uECC_Curve curve) {
     return uECC_valid_point(_public, curve);
 }
 
+int uECC_public_point_tweak(uint8_t *result, const uint8_t *public_key, const uint8_t *scalar, uECC_Curve curve) {
+#if uECC_VLI_NATIVE_LITTLE_ENDIAN
+    uECC_word_t *_public = (uECC_word_t *)public_key;
+    uECC_word_t *_result = (uECC_word_t *)result;
+#else
+    uECC_word_t _public[uECC_MAX_WORDS * 2];
+    uECC_word_t _result[uECC_MAX_WORDS * 2];
+#endif
+
+#if uECC_VLI_NATIVE_LITTLE_ENDIAN == 0
+    uECC_vli_bytesToNative(_public, public_key, curve->num_bytes);
+    uECC_vli_bytesToNative(
+        _public + curve->num_words, public_key + curve->num_bytes, curve->num_bytes);
+#endif
+
+    // Make sure that public key is valid
+    if (!uECC_valid_point(_public, curve)) {
+        return 0;
+    }
+
+    // TODO: Apply EC point multiplication
+
+    // Ensure that new public key is valid as well
+    if (!uECC_valid_point(_result, curve)) {
+        return 0;
+    }
+
+#if uECC_VLI_NATIVE_LITTLE_ENDIAN == 0
+    uECC_vli_bytesToNative(_result, result, curve->num_bytes);
+    uECC_vli_bytesToNative(
+        _result + curve->num_words, result + curve->num_bytes, curve->num_bytes);
+#endif
+
+    return 0;
+}
+
+int uECC_private_scalar_tweak(uint8_t *result, const uint8_t *private_key, const uint8_t *scalar, uECC_Curve curve) {
+#if uECC_VLI_NATIVE_LITTLE_ENDIAN
+    uECC_word_t *_private = (uECC_word_t *)private_key;
+    uECC_word_t *_result = (uECC_word_t *)result;
+    uECC_word_t *_scalar = (uECC_word_t *)scalar;
+#else
+    uECC_word_t _private[uECC_MAX_WORDS];
+    uECC_word_t _result[uECC_MAX_WORDS];
+    uECC_word_t _scalar[uECC_MAX_WORDS];
+#endif
+
+#if uECC_VLI_NATIVE_LITTLE_ENDIAN == 0
+    uECC_vli_bytesToNative(_private, private_key, BITS_TO_BYTES(curve->num_n_bits));
+    uECC_vli_bytesToNative(_scalar, scalar, BITS_TO_BYTES(curve->num_n_bits));
+#endif
+
+    /* Make sure the private key is in the range [1, n-1]. */
+    if (uECC_vli_isZero(_private, BITS_TO_WORDS(curve->num_n_bits))) {
+        return 0;
+    }
+
+    if (uECC_vli_cmp(curve->n, _private, BITS_TO_WORDS(curve->num_n_bits)) != 1) {
+        return 0;
+    }
+
+    /* Apply scalar addition */
+    uECC_vli_add(_result, _private, _scalar, curve->num_bytes);
+
+    /* Check again that the new private key is in the range [1, n-1]. */
+    if (uECC_vli_isZero(_private, BITS_TO_WORDS(curve->num_n_bits))) {
+        return 0;
+    }
+
+    if (uECC_vli_cmp(curve->n, _private, BITS_TO_WORDS(curve->num_n_bits)) != 1) {
+        return 0;
+    }
+
+#if uECC_VLI_NATIVE_LITTLE_ENDIAN
+    bcopy((uint8_t *) result, (uint8_t *) _result, curve->num_bytes);
+#else
+    uECC_vli_nativeToBytes(result, curve->num_bytes, _result);
+#endif
+
+    return 0;
+}
+
 int uECC_compute_public_key(const uint8_t *private_key, uint8_t *public_key, uECC_Curve curve) {
 #if uECC_VLI_NATIVE_LITTLE_ENDIAN
     uECC_word_t *_private = (uECC_word_t *)private_key;
