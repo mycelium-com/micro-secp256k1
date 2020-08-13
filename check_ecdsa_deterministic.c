@@ -79,8 +79,7 @@ int main() {
     }
 
 
-    // Normalize and serialize
-    uECC_normalize_signature(sig, curve);
+    // Serialize
     uECC_serialize_der(sig, serialized, curve);
 
     // Deserialize

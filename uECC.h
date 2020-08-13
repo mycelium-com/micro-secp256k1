@@ -230,9 +230,6 @@ int uECC_verify(const uint8_t *public_key,
                 const uint8_t *signature,
                 uECC_Curve curve);
 
-// Apply Low-S rule to signature
-int uECC_normalize_signature(uint8_t *signature, uECC_Curve curve);
-
 // Serialize signature using the DER encoding
 void uECC_serialize_der(const uint8_t *signature, uint8_t *serialized, uECC_Curve curve);
 

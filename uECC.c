@@ -1215,34 +1215,18 @@ static int uECC_sign_with_k(const uint8_t *private_key,
     if (uECC_vli_numBits(s, num_n_words) > (bitcount_t)curve->num_bytes * 8) {
         return 0;
     }
+
+    if (uECC_vli_cmp(s, curve->half_n, curve->num_words) == 1) {
+        /* Apply Low-S rule to signature */
+        uECC_vli_sub(s, curve->n, s, curve->num_words); /* s = n - s */
+    }
+
 #if uECC_VLI_NATIVE_LITTLE_ENDIAN
     bcopy((uint8_t *) signature + curve->num_bytes, (uint8_t *) s, curve->num_bytes);
 #else
     uECC_vli_nativeToBytes(signature + curve->num_bytes, curve->num_bytes, s);
 #endif    
     return 1;
-}
-
-int uECC_normalize_signature(uint8_t *signature, uECC_Curve curve)
-{
-    uECC_word_t s[uECC_MAX_WORDS];
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN
-    bcopy((uint8_t *) s, signature + curve->num_bytes, BITS_TO_BYTES(curve->num_n_bits));
-#else
-    uECC_vli_bytesToNative(s, signature + curve->num_bytes, BITS_TO_BYTES(curve->num_n_bits)); /* tmp = d */
-#endif
-
-    if (uECC_vli_cmp(s, curve->half_n, curve->num_words) == 1) {
-        uECC_vli_sub(s, curve->n, s, curve->num_words); /* s = n - s */
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN
-        bcopy((uint8_t *) signature + curve->num_bytes, (uint8_t *) s, curve->num_bytes);
-#else
-        uECC_vli_nativeToBytes(signature + curve->num_bytes, curve->num_bytes, s);
-#endif
-        return 1;
-    } else {
-        return 0;
-    }
 }
 
 /* Compute an HMAC using K as a key (as in RFC 6979). Note that K is always
