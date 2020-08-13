@@ -80,7 +80,7 @@ int main() {
 
 
     // Serialize
-    uECC_serialize_der(sig, serialized, curve);
+    uECC_compact_to_der(sig, serialized, curve);
 
     // Deserialize
     ECDSA_SIG *ossl_sig = ECDSA_SIG_new();

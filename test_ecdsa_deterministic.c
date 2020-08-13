@@ -80,7 +80,7 @@ int main() {
         }
 
         // Serialize
-        uECC_serialize_der(sig, serialized, curve);
+        uECC_compact_to_der(sig, serialized, curve);
 
 /*
         printf("DER:\n");
@@ -89,8 +89,6 @@ int main() {
         }
         printf("\n");
 
-        // Deserialize
-        uECC_deserialize_der(serialized, sig, curve);
 
         printf("CPT:\n");
         for (int j = 0; j < 64; ++j) {
@@ -98,6 +96,9 @@ int main() {
         }
         printf("\n");
 */
+
+        // Deserialize
+        uECC_der_to_compact(serialized, sig, curve);
 
         if (!uECC_verify(public, hash, sizeof(hash), sig, curve)) {
             printf("uECC_verify() failed\n");

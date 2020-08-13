@@ -231,10 +231,10 @@ int uECC_verify(const uint8_t *public_key,
                 uECC_Curve curve);
 
 // Serialize signature using the DER encoding
-void uECC_serialize_der(const uint8_t *signature, uint8_t *serialized, uECC_Curve curve);
+void uECC_compact_to_der(const uint8_t *compact, uint8_t *der, uECC_Curve curve);
 
 // Deserialize DER encoded signature
-void uECC_deserialize_der(const uint8_t *serialized, uint8_t *deserialized, uECC_Curve curve);
+void uECC_der_to_compact(const uint8_t *der, uint8_t *compact, uECC_Curve curve);
 
 // Private key tweak by scalar
 int uECC_private_scalar_tweak(uint8_t *result, const uint8_t *private_key, const uint8_t *scalar, uECC_Curve curve);

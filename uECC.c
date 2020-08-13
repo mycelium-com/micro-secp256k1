@@ -1357,25 +1357,25 @@ static bitcount_t smax(bitcount_t a, bitcount_t b) {
     return (a > b ? a : b);
 }
 
-void uECC_serialize_der(const uint8_t *signature, uint8_t *serialized, uECC_Curve curve) {
-    const unsigned char *rp = signature, *sp = signature + curve->num_bytes;
+void uECC_compact_to_der(const uint8_t *compact, uint8_t *der, uECC_Curve curve) {
+    const unsigned char *rp = compact, *sp = compact + curve->num_bytes;
     unsigned lenR = curve->num_bytes, lenS = curve->num_bytes;
 
-    serialized[0] = 0x30;
-    serialized[1] = 4 + lenS + lenR;
-    serialized[2] = 0x02;
-    serialized[3] = lenR;
-    memcpy(serialized+4, rp, lenR);
-    serialized[4+lenR] = 0x02;
-    serialized[5+lenR] = lenS;
-    memcpy(serialized+lenR+6, sp, lenS);
+    der[0] = 0x30;
+    der[1] = 4 + lenS + lenR;
+    der[2] = 0x02;
+    der[3] = lenR;
+    memcpy(der+4, rp, lenR);
+    der[4+lenR] = 0x02;
+    der[5+lenR] = lenS;
+    memcpy(der+lenR+6, sp, lenS);
 }
 
-void uECC_deserialize_der(const uint8_t *serialized, uint8_t *deserialized, uECC_Curve curve) {
-    unsigned char *rp = deserialized, *sp = deserialized + curve->num_bytes;
+void uECC_der_to_compact(const uint8_t *der, uint8_t *compact, uECC_Curve curve) {
+    unsigned char *rp = compact, *sp = compact + curve->num_bytes;
     unsigned lenR = curve->num_bytes, lenS = curve->num_bytes;
-    memcpy(rp, serialized+4, lenR);
-    memcpy(sp, serialized+lenR+6, lenS);
+    memcpy(rp, der+4, lenR);
+    memcpy(sp, der+lenR+6, lenS);
 }
 
 int uECC_verify(const uint8_t *public_key,
