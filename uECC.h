@@ -234,7 +234,7 @@ int uECC_verify(const uint8_t *public_key,
 void uECC_compact_to_der(const uint8_t *compact, uint8_t *der, uECC_Curve curve);
 
 // Deserialize DER encoded signature
-void uECC_der_to_compact(const uint8_t *der, uint8_t *compact, uECC_Curve curve);
+int uECC_der_to_compact(const uint8_t *input, unsigned inputlen, uint8_t *compact);
 
 // Private key tweak by scalar
 int uECC_private_scalar_tweak(uint8_t *result, const uint8_t *private_key, const uint8_t *scalar, uECC_Curve curve);

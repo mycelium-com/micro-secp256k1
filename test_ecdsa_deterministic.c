@@ -98,7 +98,10 @@ int main() {
 */
 
         // Deserialize
-        uECC_der_to_compact(serialized, sig, curve);
+        if (!uECC_der_to_compact(serialized, sizeof(serialized), sig)) {
+            printf("uECC_der_to_compact() failed\n");
+            return 1;
+        }
 
         if (!uECC_verify(public, hash, sizeof(hash), sig, curve)) {
             printf("uECC_verify() failed\n");

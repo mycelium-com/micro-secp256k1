@@ -1371,11 +1371,133 @@ void uECC_compact_to_der(const uint8_t *compact, uint8_t *der, uECC_Curve curve)
     memcpy(der+lenR+6, sp, lenS);
 }
 
-void uECC_der_to_compact(const uint8_t *der, uint8_t *compact, uECC_Curve curve) {
-    unsigned char *rp = compact, *sp = compact + curve->num_bytes;
-    unsigned lenR = curve->num_bytes, lenS = curve->num_bytes;
-    memcpy(rp, der+4, lenR);
-    memcpy(sp, der+lenR+6, lenS);
+/* Based on parse_der_lax routine from bitcoin distribution */
+int uECC_der_to_compact(const uint8_t *input, unsigned inputlen, uint8_t *compact) {
+    size_t rpos, rlen, spos, slen;
+    size_t pos = 0;
+    size_t lenbyte;
+
+    /* Sequence tag byte */
+    if (pos == inputlen || input[pos] != 0x30) {
+        return 0;
+    }
+    pos++;
+
+    /* Sequence length bytes */
+    if (pos == inputlen) {
+        return 0;
+    }
+    lenbyte = input[pos++];
+    if (lenbyte & 0x80) {
+        lenbyte -= 0x80;
+        if (lenbyte > inputlen - pos) {
+            return 0;
+        }
+        pos += lenbyte;
+    }
+
+    /* Integer tag byte for R */
+    if (pos == inputlen || input[pos] != 0x02) {
+        return 0;
+    }
+    pos++;
+
+    /* Integer length for R */
+    if (pos == inputlen) {
+        return 0;
+    }
+    lenbyte = input[pos++];
+    if (lenbyte & 0x80) {
+        lenbyte -= 0x80;
+        if (lenbyte > inputlen - pos) {
+            return 0;
+        }
+        while (lenbyte > 0 && input[pos] == 0) {
+            pos++;
+            lenbyte--;
+        }
+        if (lenbyte >= 4) {
+            return 0;
+        }
+        rlen = 0;
+        while (lenbyte > 0) {
+            rlen = (rlen << 8) + input[pos];
+            pos++;
+            lenbyte--;
+        }
+    } else {
+        rlen = lenbyte;
+    }
+    if (rlen > inputlen - pos) {
+        return 0;
+    }
+    rpos = pos;
+    pos += rlen;
+
+    /* Integer tag byte for S */
+    if (pos == inputlen || input[pos] != 0x02) {
+        return 0;
+    }
+    pos++;
+
+    /* Integer length for S */
+    if (pos == inputlen) {
+        return 0;
+    }
+    lenbyte = input[pos++];
+    if (lenbyte & 0x80) {
+        lenbyte -= 0x80;
+        if (lenbyte > inputlen - pos) {
+            return 0;
+        }
+        while (lenbyte > 0 && input[pos] == 0) {
+            pos++;
+            lenbyte--;
+        }
+        if (lenbyte >= 4) {
+            return 0;
+        }
+        slen = 0;
+        while (lenbyte > 0) {
+            slen = (slen << 8) + input[pos];
+            pos++;
+            lenbyte--;
+        }
+    } else {
+        slen = lenbyte;
+    }
+    if (slen > inputlen - pos) {
+        return 0;
+    }
+    spos = pos;
+
+    /* Ignore leading zeroes in R */
+    while (rlen > 0 && input[rpos] == 0) {
+        rlen--;
+        rpos++;
+    }
+    /* Copy R value */
+    if (rlen > 32) {
+        /* Overflow */
+        return 0;
+    } else {
+        memcpy(compact + 32 - rlen, input + rpos, rlen);
+    }
+
+    /* Ignore leading zeroes in S */
+    while (slen > 0 && input[spos] == 0) {
+        slen--;
+        spos++;
+    }
+    /* Copy S value */
+    if (slen > 32) {
+        /* Overflow */
+        return 0;
+    } else {
+        memcpy(compact + 64 - slen, input + spos, slen);
+    }
+
+    return 1;
 }
 
 int uECC_verify(const uint8_t *public_key,
