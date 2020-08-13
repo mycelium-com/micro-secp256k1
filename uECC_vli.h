@@ -149,6 +149,9 @@ void uECC_point_mult(uECC_word_t *result,
                      const uECC_word_t *scalar,
                      uECC_Curve curve);
 
+// EC point addition
+void EccPoint_add(uECC_word_t *R, const uECC_word_t *P, const uECC_word_t *Q, uECC_Curve curve);
+
 #ifdef __cplusplus
 } /* end of extern "C" */
 #endif

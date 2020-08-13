@@ -1012,9 +1012,9 @@ int uECC_public_point_tweak(uint8_t *result, const uint8_t *public_key, const ui
     }
 
     /* scalar*G */
-    uECC_point_mult(_s_mul_G, _public, _scalar, curve);
-    // TODO: Apply EC point addition
-    // R = A + scalar*G
+    uECC_point_mult(_s_mul_G, curve->G, _scalar, curve);
+    /* R = A + scalar*G */
+    EccPoint_add(_result, _public, _s_mul_G, curve);
 
     // Ensure that new public key is valid as well
     if (!uECC_valid_point(_result, curve)) {
@@ -1572,3 +1572,35 @@ void uECC_point_mult(uECC_word_t *result,
     EccPoint_mult(result, point, p2[!carry], 0, curve->num_n_bits + 1, curve);
 }
 
+/* ECC Point Addition R = P + Q */
+void EccPoint_add(uECC_word_t *R, const uECC_word_t *P, const uECC_word_t *Q, uECC_Curve curve) {
+    uECC_word_t Px[uECC_MAX_WORDS];
+    uECC_word_t Py[uECC_MAX_WORDS];
+    uECC_word_t Qx[uECC_MAX_WORDS];
+    uECC_word_t Qy[uECC_MAX_WORDS];
+
+    wordcount_t num_words = curve->num_words;
+
+    uECC_vli_set(Px, P, num_words);
+    uECC_vli_set(Py, P + num_words, num_words);
+
+    uECC_vli_set(Qx, Q, num_words);
+    uECC_vli_set(Qy, Q + num_words, num_words);
+
+
+    XYcZ_add(Px, Py, Qx, Qy, curve);
+
+    /* Find final 1/Z value. */
+    uECC_word_t z[uECC_MAX_WORDS];
+    uECC_vli_modMult_fast(z, Px, Py, curve);
+    uECC_vli_modInv(z, z, curve->p, num_words);
+    
+    uECC_vli_modMult_fast(z, z, Px, curve);
+    uECC_vli_modMult_fast(z, z, Py, curve);
+    /* End 1/Z calculation */
+
+    apply_z(Qx, Qy, z, curve);
+
+    uECC_vli_set(R, Qx, num_words);
+    uECC_vli_set(R, Qy + num_words, num_words);
+}

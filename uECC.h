@@ -239,10 +239,10 @@ void uECC_serialize_der(const uint8_t *signature, uint8_t *serialized, uECC_Curv
 // Deserialize DER encoded signature
 void uECC_deserialize_der(const uint8_t *serialized, uint8_t *deserialized, uECC_Curve curve);
 
-// Scalar addition
+// Private key tweak by scalar
 int uECC_private_scalar_tweak(uint8_t *result, const uint8_t *private_key, const uint8_t *scalar, uECC_Curve curve);
 
-// EC point multiplication
+// EC public key tweak by scalar
 int uECC_public_point_tweak(uint8_t *result, const uint8_t *public_key, const uint8_t *scalar, uECC_Curve curve);
 
 #ifdef __cplusplus
