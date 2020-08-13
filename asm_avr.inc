@@ -14,7 +14,7 @@
 
 #if (uECC_OPTIMIZATION_LEVEL >= 2)
 
-uECC_VLI_API void uECC_vli_clear(uECC_word_t *vli, wordcount_t num_words) {
+void uECC_vli_clear(uECC_word_t *vli, wordcount_t num_words) {
     volatile uECC_word_t *v = vli;
     __asm__ volatile (
     #if (uECC_MAX_WORDS != uECC_MIN_WORDS)
@@ -37,7 +37,7 @@ uECC_VLI_API void uECC_vli_clear(uECC_word_t *vli, wordcount_t num_words) {
 }
 #define asm_clear 1
 
-uECC_VLI_API void uECC_vli_set(uECC_word_t *dest, const uECC_word_t *src, wordcount_t num_words) {
+void uECC_vli_set(uECC_word_t *dest, const uECC_word_t *src, wordcount_t num_words) {
     volatile uECC_word_t *d = dest;
     __asm__ volatile (
     #if (uECC_MAX_WORDS != uECC_MIN_WORDS)
@@ -62,7 +62,7 @@ uECC_VLI_API void uECC_vli_set(uECC_word_t *dest, const uECC_word_t *src, wordco
 }
 #define asm_set 1
 
-uECC_VLI_API void uECC_vli_rshift1(uECC_word_t *vli, wordcount_t num_words) {
+void uECC_vli_rshift1(uECC_word_t *vli, wordcount_t num_words) {
     volatile uECC_word_t *v = vli;
     __asm__ volatile (
     #if (uECC_MAX_WORDS != uECC_MIN_WORDS)
@@ -109,7 +109,7 @@ uECC_VLI_API void uECC_vli_rshift1(uECC_word_t *vli, wordcount_t num_words) {
     "adc %[clb], %[rb] \n\t" \
     "st z+, %[clb] \n\t"
 
-uECC_VLI_API uECC_word_t uECC_vli_add(uECC_word_t *result,
+uECC_word_t uECC_vli_add(uECC_word_t *result,
                                       const uECC_word_t *left,
                                       const uECC_word_t *right,
                                       wordcount_t num_words) {
@@ -156,7 +156,7 @@ uECC_VLI_API uECC_word_t uECC_vli_add(uECC_word_t *result,
     "sbc %[clb], %[rb] \n\t" \
     "st z+, %[clb] \n\t"
 
-uECC_VLI_API uECC_word_t uECC_vli_sub(uECC_word_t *result,
+uECC_word_t uECC_vli_sub(uECC_word_t *result,
                                       const uECC_word_t *left,
                                       const uECC_word_t *right,
                                       wordcount_t num_words) {
@@ -197,7 +197,7 @@ uECC_VLI_API uECC_word_t uECC_vli_sub(uECC_word_t *result,
 #include "asm_avr_mult_square.inc"
 
 __attribute((noinline))
-uECC_VLI_API void uECC_vli_mult(uECC_word_t *result,
+void uECC_vli_mult(uECC_word_t *result,
                                 const uECC_word_t *left,
                                 const uECC_word_t *right,
                                 wordcount_t num_words) {
@@ -250,7 +250,7 @@ uECC_VLI_API void uECC_vli_mult(uECC_word_t *result,
 
 #if uECC_SQUARE_FUNC
 __attribute((noinline))
-uECC_VLI_API void uECC_vli_square(uECC_word_t *result,
+void uECC_vli_square(uECC_word_t *result,
                                   const uECC_word_t *left,
                                   wordcount_t num_words) {
     /* num_words should already be in r20. */
@@ -631,7 +631,7 @@ static void vli_mmod_fast_secp256k1(uECC_word_t *result, uECC_word_t *product) {
 /* ---- "Small" implementations ---- */
 
 #if !asm_add
-uECC_VLI_API uECC_word_t uECC_vli_add(uECC_word_t *result,
+uECC_word_t uECC_vli_add(uECC_word_t *result,
                                       const uECC_word_t *left,
                                       const uECC_word_t *right,
                                       wordcount_t num_words) {
@@ -664,7 +664,7 @@ uECC_VLI_API uECC_word_t uECC_vli_add(uECC_word_t *result,
 #endif
 
 #if !asm_sub
-uECC_VLI_API uECC_word_t uECC_vli_sub(uECC_word_t *result,
+uECC_word_t uECC_vli_sub(uECC_word_t *result,
                                       const uECC_word_t *left,
                                       const uECC_word_t *right,
                                       wordcount_t num_words) {
@@ -698,7 +698,7 @@ uECC_VLI_API uECC_word_t uECC_vli_sub(uECC_word_t *result,
 
 #if !asm_mult
 __attribute((noinline))
-uECC_VLI_API void uECC_vli_mult(uECC_word_t *result,
+void uECC_vli_mult(uECC_word_t *result,
                                 const uECC_word_t *left,
                                 const uECC_word_t *right,
                                 wordcount_t num_words) {
@@ -795,7 +795,7 @@ uECC_VLI_API void uECC_vli_mult(uECC_word_t *result,
 #endif
 
 #if (uECC_SQUARE_FUNC && !asm_square)
-uECC_VLI_API void uECC_vli_square(uECC_word_t *result,
+void uECC_vli_square(uECC_word_t *result,
                                   const uECC_word_t *left,
                                   wordcount_t num_words) {
     volatile uECC_word_t *r = result;

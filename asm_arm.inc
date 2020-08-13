@@ -30,7 +30,7 @@
 
 #if (uECC_OPTIMIZATION_LEVEL >= 2)
 
-uECC_VLI_API uECC_word_t uECC_vli_add(uECC_word_t *result,
+uECC_word_t uECC_vli_add(uECC_word_t *result,
                                       const uECC_word_t *left,
                                       const uECC_word_t *right,
                                       wordcount_t num_words) {
@@ -84,7 +84,7 @@ uECC_VLI_API uECC_word_t uECC_vli_add(uECC_word_t *result,
 }
 #define asm_add 1
 
-uECC_VLI_API uECC_word_t uECC_vli_sub(uECC_word_t *result,
+uECC_word_t uECC_vli_sub(uECC_word_t *result,
                                       const uECC_word_t *left,
                                       const uECC_word_t *right,
                                       wordcount_t num_words) {
@@ -153,7 +153,7 @@ uECC_VLI_API uECC_word_t uECC_vli_sub(uECC_word_t *result,
 
 #if (uECC_OPTIMIZATION_LEVEL == 3)
 
-uECC_VLI_API void uECC_vli_mult(uint32_t *result,
+void uECC_vli_mult(uint32_t *result,
                                 const uint32_t *left,
                                 const uint32_t *right,
                                 wordcount_t num_words) {
@@ -201,7 +201,7 @@ uECC_VLI_API void uECC_vli_mult(uint32_t *result,
 #define asm_mult 1
 
 #if uECC_SQUARE_FUNC
-uECC_VLI_API void uECC_vli_square(uECC_word_t *result,
+void uECC_vli_square(uECC_word_t *result,
                                   const uECC_word_t *left,
                                   wordcount_t num_words) {
     register uint32_t *r0 __asm__("r0") = result;
@@ -250,7 +250,7 @@ uECC_VLI_API void uECC_vli_square(uECC_word_t *result,
 
 #else /* (uECC_OPTIMIZATION_LEVEL > 3) */
 
-uECC_VLI_API void uECC_vli_mult(uint32_t *result,
+void uECC_vli_mult(uint32_t *result,
                                 const uint32_t *left,
                                 const uint32_t *right,
                                 wordcount_t num_words) {
@@ -274,7 +274,7 @@ uECC_VLI_API void uECC_vli_mult(uint32_t *result,
 #define asm_mult 1
 
 #if uECC_SQUARE_FUNC
-uECC_VLI_API void uECC_vli_square(uECC_word_t *result,
+void uECC_vli_square(uECC_word_t *result,
                                   const uECC_word_t *left,
                                   wordcount_t num_words) {
     register uint32_t *r0 __asm__("r0") = result;
@@ -305,7 +305,7 @@ uECC_VLI_API void uECC_vli_square(uECC_word_t *result,
 /* ---- "Small" implementations ---- */
 
 #if !asm_add
-uECC_VLI_API uECC_word_t uECC_vli_add(uECC_word_t *result,
+uECC_word_t uECC_vli_add(uECC_word_t *result,
                                       const uECC_word_t *left,
                                       const uECC_word_t *right,
                                       wordcount_t num_words) {
@@ -337,7 +337,7 @@ uECC_VLI_API uECC_word_t uECC_vli_add(uECC_word_t *result,
 #endif
 
 #if !asm_sub
-uECC_VLI_API uECC_word_t uECC_vli_sub(uECC_word_t *result,
+uECC_word_t uECC_vli_sub(uECC_word_t *result,
                                       const uECC_word_t *left,
                                       const uECC_word_t *right,
                                       wordcount_t num_words) {
@@ -369,7 +369,7 @@ uECC_VLI_API uECC_word_t uECC_vli_sub(uECC_word_t *result,
 #endif
 
 #if !asm_mult
-uECC_VLI_API void uECC_vli_mult(uECC_word_t *result,
+void uECC_vli_mult(uECC_word_t *result,
                                 const uECC_word_t *left,
                                 const uECC_word_t *right,
                                 wordcount_t num_words) {
@@ -538,7 +538,7 @@ uECC_VLI_API void uECC_vli_mult(uECC_word_t *result,
 
 #if uECC_SQUARE_FUNC
 #if !asm_square
-uECC_VLI_API void uECC_vli_square(uECC_word_t *result,
+void uECC_vli_square(uECC_word_t *result,
                                   const uECC_word_t *left,
                                   wordcount_t num_words) {
 #if (uECC_PLATFORM != uECC_arm_thumb)

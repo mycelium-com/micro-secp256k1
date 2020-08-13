@@ -6,18 +6,10 @@
 #include "uECC.h"
 #include "types.h"
 
-/* Functions for raw large-integer manipulation. These are only available
-   if uECC.c is compiled with uECC_ENABLE_VLI_API defined to 1. */
-#ifndef uECC_ENABLE_VLI_API
-    #define uECC_ENABLE_VLI_API 0
-#endif
-
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-
-#if uECC_ENABLE_VLI_API
 
 void uECC_vli_clear(uECC_word_t *vli, wordcount_t num_words);
 
@@ -156,8 +148,6 @@ void uECC_point_mult(uECC_word_t *result,
                      const uECC_word_t *point,
                      const uECC_word_t *scalar,
                      uECC_Curve curve);
-
-#endif /* uECC_ENABLE_VLI_API */
 
 #ifdef __cplusplus
 } /* end of extern "C" */
