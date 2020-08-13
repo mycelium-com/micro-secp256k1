@@ -69,7 +69,10 @@ int main() {
             printf("uECC_make_key() failed\n");
             return 1;
         }
-        memcpy(hash, public, sizeof(hash));
+
+        if (i > 0) {
+            memcpy(hash, sig, sizeof(hash));
+        }
 
         if (!uECC_sign_deterministic(private, hash, sizeof(hash), &ctx.uECC, sig, curve)) {
             printf("uECC_sign() failed\n");
@@ -79,8 +82,22 @@ int main() {
         // Serialize
         uECC_serialize_der(sig, serialized, curve);
 
+/*
+        printf("DER:\n");
+        for (int j = 0; j < 70; ++j) {
+            printf("%02x", serialized[j]);
+        }
+        printf("\n");
+
         // Deserialize
         uECC_deserialize_der(serialized, sig, curve);
+
+        printf("CPT:\n");
+        for (int j = 0; j < 64; ++j) {
+            printf("%02x", sig[j]);
+        }
+        printf("\n");
+*/
 
         if (!uECC_verify(public, hash, sizeof(hash), sig, curve)) {
             printf("uECC_verify() failed\n");
@@ -88,6 +105,6 @@ int main() {
         }
     }
     printf("\n");
-    
+
     return 0;
 }
