@@ -913,25 +913,13 @@ void uECC_compress(const uint8_t *public_key, uint8_t *compressed, uECC_Curve cu
     for (i = 0; i < curve->num_bytes; ++i) {
         compressed[i+1] = public_key[i];
     }
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN
-    compressed[0] = 2 + (public_key[curve->num_bytes] & 0x01);
-#else
     compressed[0] = 2 + (public_key[curve->num_bytes * 2 - 1] & 0x01);
-#endif
 }
 
 void uECC_decompress(const uint8_t *compressed, uint8_t *public_key, uECC_Curve curve) {
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN
-    uECC_word_t *point = (uECC_word_t *)public_key;
-#else
     uECC_word_t point[uECC_MAX_WORDS * 2];
-#endif
     uECC_word_t *y = point + curve->num_words;
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN
-    bcopy(public_key, compressed+1, curve->num_bytes);
-#else
     uECC_vli_bytesToNative(point, compressed + 1, curve->num_bytes);
-#endif
     curve->x_side(y, point, curve);
     curve->mod_sqrt(y, curve);
 
@@ -939,10 +927,8 @@ void uECC_decompress(const uint8_t *compressed, uint8_t *public_key, uECC_Curve 
         uECC_vli_sub(y, curve->p, y, curve->num_words);
     }
 
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN == 0
     uECC_vli_nativeToBytes(public_key, curve->num_bytes, point);
     uECC_vli_nativeToBytes(public_key + curve->num_bytes, curve->num_bytes, y);
-#endif
 }
 #endif /* uECC_SUPPORT_COMPRESSED_POINT */
 
@@ -970,38 +956,24 @@ int uECC_valid_point(const uECC_word_t *point, uECC_Curve curve) {
 }
 
 int uECC_valid_public_key(const uint8_t *public_key, uECC_Curve curve) {
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN
-    uECC_word_t *_public = (uECC_word_t *)public_key;
-#else
     uECC_word_t _public[uECC_MAX_WORDS * 2];
-#endif
 
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN == 0
     uECC_vli_bytesToNative(_public, public_key, curve->num_bytes);
-    uECC_vli_bytesToNative(
-        _public + curve->num_words, public_key + curve->num_bytes, curve->num_bytes);
-#endif
+    uECC_vli_bytesToNative(_public + curve->num_words, public_key + curve->num_bytes, curve->num_bytes);
+
     return uECC_valid_point(_public, curve);
 }
 
 int uECC_public_point_tweak(uint8_t *result, const uint8_t *public_key, const uint8_t *scalar, uECC_Curve curve) {
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN
-    uECC_word_t *_public = (uECC_word_t *)public_key;
-    uECC_word_t *_result = (uECC_word_t *)result;
-    uECC_word_t *_scalar = (uECC_word_t *)scalar;
-#else
     uECC_word_t _public[uECC_MAX_WORDS * 2];
     uECC_word_t _result[uECC_MAX_WORDS * 2];
     uECC_word_t _scalar[uECC_MAX_WORDS];
-#endif
 
     uECC_word_t _s_mul_G[uECC_MAX_WORDS * 2];
 
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN == 0
     uECC_vli_bytesToNative(_public, public_key, curve->num_bytes);
     uECC_vli_bytesToNative(_public + curve->num_words, public_key + curve->num_bytes, curve->num_bytes);
     uECC_vli_bytesToNative(_scalar, scalar, BITS_TO_BYTES(curve->num_n_bits));
-#endif
 
     // Make sure that public key is valid
     if (!uECC_valid_point(_public, curve)) {
@@ -1018,30 +990,19 @@ int uECC_public_point_tweak(uint8_t *result, const uint8_t *public_key, const ui
         return 0;
     }
 
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN == 0
     uECC_vli_bytesToNative(_result, result, curve->num_bytes);
-    uECC_vli_bytesToNative(
-        _result + curve->num_words, result + curve->num_bytes, curve->num_bytes);
-#endif
+    uECC_vli_bytesToNative(_result + curve->num_words, result + curve->num_bytes, curve->num_bytes);
 
     return 0;
 }
 
 int uECC_private_scalar_tweak(uint8_t *result, const uint8_t *private_key, const uint8_t *scalar, uECC_Curve curve) {
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN
-    uECC_word_t *_private = (uECC_word_t *)private_key;
-    uECC_word_t *_result = (uECC_word_t *)result;
-    uECC_word_t *_scalar = (uECC_word_t *)scalar;
-#else
     uECC_word_t _private[uECC_MAX_WORDS];
     uECC_word_t _result[uECC_MAX_WORDS];
     uECC_word_t _scalar[uECC_MAX_WORDS];
-#endif
 
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN == 0
     uECC_vli_bytesToNative(_private, private_key, BITS_TO_BYTES(curve->num_n_bits));
     uECC_vli_bytesToNative(_scalar, scalar, BITS_TO_BYTES(curve->num_n_bits));
-#endif
 
     /* Make sure the private key is in the range [1, n-1]. */
     if (uECC_vli_isZero(_private, BITS_TO_WORDS(curve->num_n_bits))) {
@@ -1066,27 +1027,16 @@ int uECC_private_scalar_tweak(uint8_t *result, const uint8_t *private_key, const
         return 0;
     }
 
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN
-    bcopy((uint8_t *) result, (uint8_t *) _result, curve->num_bytes);
-#else
     uECC_vli_nativeToBytes(result, curve->num_bytes, _result);
-#endif
 
     return 0;
 }
 
 int uECC_compute_public_key(const uint8_t *private_key, uint8_t *public_key, uECC_Curve curve) {
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN
-    uECC_word_t *_private = (uECC_word_t *)private_key;
-    uECC_word_t *_public = (uECC_word_t *)public_key;
-#else
     uECC_word_t _private[uECC_MAX_WORDS];
     uECC_word_t _public[uECC_MAX_WORDS * 2];
-#endif
 
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN == 0
     uECC_vli_bytesToNative(_private, private_key, BITS_TO_BYTES(curve->num_n_bits));
-#endif
 
     /* Make sure the private key is in the range [1, n-1]. */
     if (uECC_vli_isZero(_private, BITS_TO_WORDS(curve->num_n_bits))) {
@@ -1102,11 +1052,8 @@ int uECC_compute_public_key(const uint8_t *private_key, uint8_t *public_key, uEC
         return 0;
     }
 
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN == 0
     uECC_vli_nativeToBytes(public_key, curve->num_bytes, _public);
-    uECC_vli_nativeToBytes(
-        public_key + curve->num_bytes, curve->num_bytes, _public + curve->num_words);
-#endif
+    uECC_vli_nativeToBytes(public_key + curve->num_bytes, curve->num_bytes, _public + curve->num_words);
     return 1;
 }
 
@@ -1128,11 +1075,7 @@ static void bits2int(uECC_word_t *native,
     }
 
     uECC_vli_clear(native, num_n_words);
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN
-    bcopy((uint8_t *) native, bits, bits_size);
-#else
     uECC_vli_bytesToNative(native, bits, bits_size);
-#endif    
     if (bits_size * 8 <= (unsigned)curve->num_n_bits) {
         return;
     }
@@ -1161,11 +1104,7 @@ static int uECC_sign_with_k(const uint8_t *private_key,
     uECC_word_t tmp[uECC_MAX_WORDS];
     uECC_word_t s[uECC_MAX_WORDS];
     uECC_word_t *k2[2] = {tmp, s};
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN
-    uECC_word_t *p = (uECC_word_t *)signature;
-#else
     uECC_word_t p[uECC_MAX_WORDS * 2];
-#endif
     uECC_word_t carry;
     wordcount_t num_words = curve->num_words;
     wordcount_t num_n_words = BITS_TO_WORDS(curve->num_n_bits);
@@ -1192,15 +1131,8 @@ static int uECC_sign_with_k(const uint8_t *private_key,
     uECC_vli_modInv(k, k, curve->n, num_n_words);       /* k = 1 / k' */
     uECC_vli_modMult(k, k, tmp, curve->n, num_n_words); /* k = 1 / k */
 
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN == 0
     uECC_vli_nativeToBytes(signature, curve->num_bytes, p); /* store r */
-#endif
-
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN
-    bcopy((uint8_t *) tmp, private_key, BITS_TO_BYTES(curve->num_n_bits));
-#else
     uECC_vli_bytesToNative(tmp, private_key, BITS_TO_BYTES(curve->num_n_bits)); /* tmp = d */
-#endif
 
     s[num_n_words - 1] = 0;
     uECC_vli_set(s, p, num_words);
@@ -1218,11 +1150,8 @@ static int uECC_sign_with_k(const uint8_t *private_key,
         uECC_vli_sub(s, curve->n, s, curve->num_words); /* s = n - s */
     }
 
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN
-    bcopy((uint8_t *) signature + curve->num_bytes, (uint8_t *) s, curve->num_bytes);
-#else
     uECC_vli_nativeToBytes(signature + curve->num_bytes, curve->num_bytes, s);
-#endif    
+
     return 1;
 }
 
@@ -1514,11 +1443,7 @@ int uECC_verify(const uint8_t *public_key,
     const uECC_word_t *point;
     bitcount_t num_bits;
     bitcount_t i;
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN
-    uECC_word_t *_public = (uECC_word_t *)public_key;
-#else
     uECC_word_t _public[uECC_MAX_WORDS * 2];
-#endif    
     uECC_word_t r[uECC_MAX_WORDS], s[uECC_MAX_WORDS];
     wordcount_t num_words = curve->num_words;
     wordcount_t num_n_words = BITS_TO_WORDS(curve->num_n_bits);
@@ -1527,16 +1452,10 @@ int uECC_verify(const uint8_t *public_key,
     r[num_n_words - 1] = 0;
     s[num_n_words - 1] = 0;
 
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN
-    bcopy((uint8_t *) r, signature, curve->num_bytes);
-    bcopy((uint8_t *) s, signature + curve->num_bytes, curve->num_bytes);
-#else
     uECC_vli_bytesToNative(_public, public_key, curve->num_bytes);
-    uECC_vli_bytesToNative(
-        _public + num_words, public_key + curve->num_bytes, curve->num_bytes);
+    uECC_vli_bytesToNative(_public + num_words, public_key + curve->num_bytes, curve->num_bytes);
     uECC_vli_bytesToNative(r, signature, curve->num_bytes);
     uECC_vli_bytesToNative(s, signature + curve->num_bytes, curve->num_bytes);
-#endif
 
     /* r, s must not be 0. */
     if (uECC_vli_isZero(r, num_words) || uECC_vli_isZero(s, num_words)) {
