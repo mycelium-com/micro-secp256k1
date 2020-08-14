@@ -85,7 +85,7 @@ void uECC_vli_mmod(uECC_word_t *result,
 
 /* Calculates result = product (mod curve->p), where product is up to
    2 * curve->num_words long. */
-void uECC_vli_mmod_fast(uECC_word_t *result, uECC_word_t *product, uECC_Curve curve);
+void uECC_vli_mmod_fast(uECC_word_t *result, uECC_word_t *product);
 
 /* Computes result = (left * right) % mod.
    Currently only designed to work for mod == curve->p or curve_n. */
@@ -98,8 +98,7 @@ void uECC_vli_modMult(uECC_word_t *result,
 /* Computes result = (left * right) % curve->p. */
 void uECC_vli_modMult_fast(uECC_word_t *result,
                            const uECC_word_t *left,
-                           const uECC_word_t *right,
-                           uECC_Curve curve);
+                           const uECC_word_t *right);
 
 /* Computes result = left^2 % mod.
    Currently only designed to work for mod == curve->p or curve_n. */
@@ -109,7 +108,7 @@ void uECC_vli_modSquare(uECC_word_t *result,
                         wordcount_t num_words);
 
 /* Computes result = left^2 % curve->p. */
-void uECC_vli_modSquare_fast(uECC_word_t *result, const uECC_word_t *left, uECC_Curve curve);
+void uECC_vli_modSquare_fast(uECC_word_t *result, const uECC_word_t *left);
 
 /* Computes result = (1 / input) % mod.*/
 void uECC_vli_modInv(uECC_word_t *result,
@@ -118,37 +117,36 @@ void uECC_vli_modInv(uECC_word_t *result,
                      wordcount_t num_words);
 
 /* Calculates a = sqrt(a) (mod curve->p) */
-void uECC_vli_mod_sqrt(uECC_word_t *a, uECC_Curve curve);
+void uECC_vli_mod_sqrt(uECC_word_t *a);
 
 /* Converts an integer in uECC native format to big-endian bytes. */
 void uECC_vli_nativeToBytes(uint8_t *bytes, int num_bytes, const uECC_word_t *native);
 /* Converts big-endian bytes to an integer in uECC native format. */
 void uECC_vli_bytesToNative(uECC_word_t *native, const uint8_t *bytes, int num_bytes);
 
-unsigned uECC_curve_num_words(uECC_Curve curve);
-unsigned uECC_curve_num_bytes(uECC_Curve curve);
-unsigned uECC_curve_num_bits(uECC_Curve curve);
-unsigned uECC_curve_num_n_words(uECC_Curve curve);
-unsigned uECC_curve_num_n_bytes(uECC_Curve curve);
-unsigned uECC_curve_num_n_bits(uECC_Curve curve);
+unsigned uECC_curve_num_words();
+unsigned uECC_curve_num_bytes();
+unsigned uECC_curve_num_bits();
+unsigned uECC_curve_num_n_words();
+unsigned uECC_curve_num_n_bytes();
+unsigned uECC_curve_num_n_bits();
 
-const uECC_word_t *uECC_curve_p(uECC_Curve curve);
-const uECC_word_t *uECC_curve_n(uECC_Curve curve);
-const uECC_word_t *uECC_curve_G(uECC_Curve curve);
-const uECC_word_t *uECC_curve_b(uECC_Curve curve);
+const uECC_word_t *uECC_curve_p();
+const uECC_word_t *uECC_curve_n();
+const uECC_word_t *uECC_curve_G();
+const uECC_word_t *uECC_curve_b();
 
-int uECC_valid_point(const uECC_word_t *point, uECC_Curve curve);
+int uECC_valid_point(const uECC_word_t *point);
 
 /* Multiplies a point by a scalar. Points are represented by the X coordinate followed by
    the Y coordinate in the same array, both coordinates are curve->num_words long. Note
    that scalar must be curve->num_n_words long (NOT curve->num_words). */
 void uECC_point_mult(uECC_word_t *result,
                      const uECC_word_t *point,
-                     const uECC_word_t *scalar,
-                     uECC_Curve curve);
+                     const uECC_word_t *scalar);
 
 // EC point addition
-void EccPoint_add(uECC_word_t *R, const uECC_word_t *P, const uECC_word_t *Q, uECC_Curve curve);
+void EccPoint_add(uECC_word_t *R, const uECC_word_t *P, const uECC_word_t *Q);
 
 #ifdef __cplusplus
 } /* end of extern "C" */

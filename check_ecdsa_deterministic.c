@@ -65,9 +65,7 @@ int main() {
         tmp
     }};
 
-    const struct uECC_Curve_t * curve = uECC_secp256k1();
-
-    if (!uECC_compute_public_key(private, public + 1, curve)) {
+    if (!uECC_compute_public_key(private, public + 1)) {
         printf("uECC_make_key() failed\n");
         return 1;
     }
@@ -79,13 +77,13 @@ int main() {
     }
     printf("\n");
 
-    if (!uECC_sign_deterministic(private, hash, sizeof(hash), &ctx.uECC, sig, curve)) {
+    if (!uECC_sign_deterministic(private, hash, sizeof(hash), &ctx.uECC, sig)) {
         printf("uECC_sign_deterministic() failed\n");
         return 1;
     }
 
     // Serialize
-    uECC_compact_to_der(sig, serialized, curve);
+    uECC_compact_to_der(sig, serialized);
 
     printf("DER sig:\n");
     for (int j = 0; j < 70; ++j) {
@@ -120,7 +118,7 @@ int main() {
     }
 
     // Compressed pubkey
-    uECC_compress(public + 1, public_c, curve);
+    uECC_compress(public + 1, public_c);
 
     printf("pubkey short:\n");
     for (int j = 0; j < 33; ++j) {

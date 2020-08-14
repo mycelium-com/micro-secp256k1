@@ -40,25 +40,24 @@ faster somewhat faster, but increases the code size. */
 
 struct uECC_Curve_t;
 typedef const struct uECC_Curve_t * uECC_Curve;
+uECC_Curve curve;
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-uECC_Curve uECC_secp256k1(void);
-
 /* uECC_curve_private_key_size() function.
 
 Returns the size of a private key for the curve in bytes.
 */
-int uECC_curve_private_key_size(uECC_Curve curve);
+int uECC_curve_private_key_size();
 
 /* uECC_curve_public_key_size() function.
 
 Returns the size of a public key for the curve in bytes.
 */
-int uECC_curve_public_key_size(uECC_Curve curve);
+int uECC_curve_public_key_size();
 
 /* uECC_compress() function.
 Compress a public key.
@@ -71,7 +70,7 @@ Outputs:
                  (curve size + 1) bytes long; for example, if the curve is secp256r1,
                  compressed must be 33 bytes long.
 */
-void uECC_compress(const uint8_t *public_key, uint8_t *compressed, uECC_Curve curve);
+void uECC_compress(const uint8_t *public_key, uint8_t *compressed);
 
 /* uECC_decompress() function.
 Decompress a compressed public key.
@@ -82,7 +81,7 @@ Inputs:
 Outputs:
     public_key - Will be filled in with the decompressed public key.
 */
-void uECC_decompress(const uint8_t *compressed, uint8_t *public_key, uECC_Curve curve);
+void uECC_decompress(const uint8_t *compressed, uint8_t *public_key);
 
 /* uECC_valid_public_key() function.
 Check to see if a public key is valid.
@@ -96,7 +95,7 @@ Inputs:
 
 Returns 1 if the public key is valid, 0 if it is invalid.
 */
-int uECC_valid_public_key(const uint8_t *public_key, uECC_Curve curve);
+int uECC_valid_public_key(const uint8_t *public_key);
 
 /* uECC_compute_public_key() function.
 Compute the corresponding public key for a private key.
@@ -109,7 +108,7 @@ Outputs:
 
 Returns 1 if the key was computed successfully, 0 if an error occurred.
 */
-int uECC_compute_public_key(const uint8_t *private_key, uint8_t *public_key, uECC_Curve curve);
+int uECC_compute_public_key(const uint8_t *private_key, uint8_t *public_key);
 
 /* uECC_HashContext structure.
 This is used to pass in an arbitrary hash function to uECC_sign_deterministic().
@@ -185,8 +184,7 @@ int uECC_sign_deterministic(const uint8_t *private_key,
                             const uint8_t *message_hash,
                             unsigned hash_size,
                             const uECC_HashContext *hash_context,
-                            uint8_t *signature,
-                            uECC_Curve curve);
+                            uint8_t *signature);
 
 /* uECC_verify() function.
 Verify an ECDSA signature.
@@ -205,20 +203,19 @@ Returns 1 if the signature is valid, 0 if it is invalid.
 int uECC_verify(const uint8_t *public_key,
                 const uint8_t *message_hash,
                 unsigned hash_size,
-                const uint8_t *signature,
-                uECC_Curve curve);
+                const uint8_t *signature);
 
 // Serialize signature using the DER encoding
-void uECC_compact_to_der(const uint8_t *compact, uint8_t *der, uECC_Curve curve);
+void uECC_compact_to_der(const uint8_t *compact, uint8_t *der);
 
 // Deserialize DER encoded signature
 int uECC_der_to_compact(const uint8_t *input, unsigned inputlen, uint8_t *compact);
 
 // Private key tweak by scalar
-int uECC_private_scalar_tweak(uint8_t *result, const uint8_t *private_key, const uint8_t *scalar, uECC_Curve curve);
+int uECC_private_scalar_tweak(uint8_t *result, const uint8_t *private_key, const uint8_t *scalar);
 
 // EC public key tweak by scalar
-int uECC_public_point_tweak(uint8_t *result, const uint8_t *public_key, const uint8_t *scalar, uECC_Curve curve);
+int uECC_public_point_tweak(uint8_t *result, const uint8_t *public_key, const uint8_t *scalar);
 
 #ifdef __cplusplus
 } /* end of extern "C" */

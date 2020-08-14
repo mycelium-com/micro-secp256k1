@@ -30,7 +30,7 @@
 #endif /* uECC_WORD_SIZE */
 
 /* Compute a = sqrt(a) (mod curve_p). */
-static void mod_sqrt_default(uECC_word_t *a, uECC_Curve curve) {
+static void mod_sqrt_default(uECC_word_t *a) {
     bitcount_t i;
     uECC_word_t p1[uECC_MAX_WORDS] = {1};
     uECC_word_t l_result[uECC_MAX_WORDS] = {1};
@@ -40,9 +40,9 @@ static void mod_sqrt_default(uECC_word_t *a, uECC_Curve curve) {
        sqrt(a) = a^((curve->p + 1) / 4) (mod curve->p). */
     uECC_vli_add(p1, curve->p, p1, num_words); /* p1 = curve_p + 1 */
     for (i = uECC_vli_numBits(p1, num_words) - 1; i > 1; --i) {
-        uECC_vli_modSquare_fast(l_result, l_result, curve);
+        uECC_vli_modSquare_fast(l_result, l_result);
         if (uECC_vli_testBit(p1, i)) {
-            uECC_vli_modMult_fast(l_result, l_result, a, curve);
+            uECC_vli_modMult_fast(l_result, l_result, a);
         }
     }
     uECC_vli_set(a, l_result, num_words);
@@ -50,9 +50,8 @@ static void mod_sqrt_default(uECC_word_t *a, uECC_Curve curve) {
 
 static void double_jacobian_secp256k1(uECC_word_t * X1,
                                       uECC_word_t * Y1,
-                                      uECC_word_t * Z1,
-                                      uECC_Curve curve);
-static void x_side_secp256k1(uECC_word_t *result, const uECC_word_t *x, uECC_Curve curve);
+                                      uECC_word_t * Z1);
+static void x_side_secp256k1(uECC_word_t *result, const uECC_word_t *x);
 #if (uECC_OPTIMIZATION_LEVEL > 0)
 static void vli_mmod_fast_secp256k1(uECC_word_t *result, uECC_word_t *product);
 #endif
@@ -94,14 +93,15 @@ static const struct uECC_Curve_t curve_secp256k1 = {
 #endif
 };
 
-uECC_Curve uECC_secp256k1(void) { return &curve_secp256k1; }
+uECC_Curve curve = &curve_secp256k1;
+
+//uECC_Curve uECC_secp256k1(void) { return &curve_secp256k1; }
 
 
 /* Double in place */
 static void double_jacobian_secp256k1(uECC_word_t * X1,
                                       uECC_word_t * Y1,
-                                      uECC_word_t * Z1,
-                                      uECC_Curve curve) {
+                                      uECC_word_t * Z1) {
     /* t1 = X, t2 = Y, t3 = Z */
     uECC_word_t t4[num_words_secp256k1];
     uECC_word_t t5[num_words_secp256k1];
@@ -110,11 +110,11 @@ static void double_jacobian_secp256k1(uECC_word_t * X1,
         return;
     }
     
-    uECC_vli_modSquare_fast(t5, Y1, curve);   /* t5 = y1^2 */
-    uECC_vli_modMult_fast(t4, X1, t5, curve); /* t4 = x1*y1^2 = A */
-    uECC_vli_modSquare_fast(X1, X1, curve);   /* t1 = x1^2 */
-    uECC_vli_modSquare_fast(t5, t5, curve);   /* t5 = y1^4 */
-    uECC_vli_modMult_fast(Z1, Y1, Z1, curve); /* t3 = y1*z1 = z3 */
+    uECC_vli_modSquare_fast(t5, Y1);   /* t5 = y1^2 */
+    uECC_vli_modMult_fast(t4, X1, t5); /* t4 = x1*y1^2 = A */
+    uECC_vli_modSquare_fast(X1, X1);   /* t1 = x1^2 */
+    uECC_vli_modSquare_fast(t5, t5);   /* t5 = y1^4 */
+    uECC_vli_modMult_fast(Z1, Y1, Z1); /* t3 = y1*z1 = z3 */
     
     uECC_vli_modAdd(Y1, X1, X1, curve->p, num_words_secp256k1); /* t2 = 2*x1^2 */
     uECC_vli_modAdd(Y1, Y1, X1, curve->p, num_words_secp256k1); /* t2 = 3*x1^2 */
@@ -127,19 +127,19 @@ static void double_jacobian_secp256k1(uECC_word_t * X1,
     }
     /* t2 = 3/2*(x1^2) = B */
     
-    uECC_vli_modSquare_fast(X1, Y1, curve);                     /* t1 = B^2 */
+    uECC_vli_modSquare_fast(X1, Y1);                     /* t1 = B^2 */
     uECC_vli_modSub(X1, X1, t4, curve->p, num_words_secp256k1); /* t1 = B^2 - A */
     uECC_vli_modSub(X1, X1, t4, curve->p, num_words_secp256k1); /* t1 = B^2 - 2A = x3 */
     
     uECC_vli_modSub(t4, t4, X1, curve->p, num_words_secp256k1); /* t4 = A - x3 */
-    uECC_vli_modMult_fast(Y1, Y1, t4, curve);                   /* t2 = B * (A - x3) */
+    uECC_vli_modMult_fast(Y1, Y1, t4);                   /* t2 = B * (A - x3) */
     uECC_vli_modSub(Y1, Y1, t5, curve->p, num_words_secp256k1); /* t2 = B * (A - x3) - y1^4 = y3 */
 }
 
 /* Computes result = x^3 + b. result must not overlap x. */
-static void x_side_secp256k1(uECC_word_t *result, const uECC_word_t *x, uECC_Curve curve) {
-    uECC_vli_modSquare_fast(result, x, curve);                                /* r = x^2 */
-    uECC_vli_modMult_fast(result, result, x, curve);                          /* r = x^3 */
+static void x_side_secp256k1(uECC_word_t *result, const uECC_word_t *x) {
+    uECC_vli_modSquare_fast(result, x);                                /* r = x^2 */
+    uECC_vli_modMult_fast(result, result, x);                          /* r = x^3 */
     uECC_vli_modAdd(result, result, curve->b, curve->p, num_words_secp256k1); /* r = x^3 + b */
 }
 
