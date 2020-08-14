@@ -117,10 +117,8 @@ void uECC_vli_modInv(uECC_word_t *result,
                      const uECC_word_t *mod,
                      wordcount_t num_words);
 
-#if uECC_SUPPORT_COMPRESSED_POINT
 /* Calculates a = sqrt(a) (mod curve->p) */
 void uECC_vli_mod_sqrt(uECC_word_t *a, uECC_Curve curve);
-#endif
 
 /* Converts an integer in uECC native format to big-endian bytes. */
 void uECC_vli_nativeToBytes(uint8_t *bytes, int num_bytes, const uECC_word_t *native);

@@ -29,7 +29,6 @@
 
 #endif /* uECC_WORD_SIZE */
 
-#if uECC_SUPPORT_COMPRESSED_POINT
 /* Compute a = sqrt(a) (mod curve_p). */
 static void mod_sqrt_default(uECC_word_t *a, uECC_Curve curve) {
     bitcount_t i;
@@ -48,7 +47,6 @@ static void mod_sqrt_default(uECC_word_t *a, uECC_Curve curve) {
     }
     uECC_vli_set(a, l_result, num_words);
 }
-#endif /* uECC_SUPPORT_COMPRESSED_POINT */
 
 static void double_jacobian_secp256k1(uECC_word_t * X1,
                                       uECC_word_t * Y1,
@@ -89,9 +87,7 @@ static const struct uECC_Curve_t curve_secp256k1 = {
         BYTES_TO_WORDS_8(00, 00, 00, 00, 00, 00, 00, 00),
         BYTES_TO_WORDS_8(00, 00, 00, 00, 00, 00, 00, 00) },
     &double_jacobian_secp256k1,
-#if uECC_SUPPORT_COMPRESSED_POINT
     &mod_sqrt_default,
-#endif
     &x_side_secp256k1,
 #if (uECC_OPTIMIZATION_LEVEL > 0)
     &vli_mmod_fast_secp256k1

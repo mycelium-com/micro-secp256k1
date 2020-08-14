@@ -102,9 +102,7 @@ struct uECC_Curve_t {
                             uECC_word_t * Y1,
                             uECC_word_t * Z1,
                             uECC_Curve curve);
-#if uECC_SUPPORT_COMPRESSED_POINT
     void (*mod_sqrt)(uECC_word_t *a, uECC_Curve curve);
-#endif
     void (*x_side)(uECC_word_t *result, const uECC_word_t *x, uECC_Curve curve);
 #if (uECC_OPTIMIZATION_LEVEL > 0)
     void (*mmod_fast)(uECC_word_t *result, uECC_word_t *product);
@@ -907,7 +905,6 @@ void uECC_vli_bytesToNative(uECC_word_t *native,
 
 #endif /* uECC_WORD_SIZE */
 
-#if uECC_SUPPORT_COMPRESSED_POINT
 void uECC_compress(const uint8_t *public_key, uint8_t *compressed, uECC_Curve curve) {
     wordcount_t i;
     for (i = 0; i < curve->num_bytes; ++i) {
@@ -930,7 +927,6 @@ void uECC_decompress(const uint8_t *compressed, uint8_t *public_key, uECC_Curve 
     uECC_vli_nativeToBytes(public_key, curve->num_bytes, point);
     uECC_vli_nativeToBytes(public_key + curve->num_bytes, curve->num_bytes, y);
 }
-#endif /* uECC_SUPPORT_COMPRESSED_POINT */
 
 int uECC_valid_point(const uECC_word_t *point, uECC_Curve curve) {
     uECC_word_t tmp1[uECC_MAX_WORDS];
@@ -1568,11 +1564,9 @@ const uECC_word_t *uECC_curve_b(uECC_Curve curve) {
     return curve->b;
 }
 
-#if uECC_SUPPORT_COMPRESSED_POINT
 void uECC_vli_mod_sqrt(uECC_word_t *a, uECC_Curve curve) {
     curve->mod_sqrt(a, curve);
 }
-#endif
 
 void uECC_vli_mmod_fast(uECC_word_t *result, uECC_word_t *product, uECC_Curve curve) {
 #if (uECC_OPTIMIZATION_LEVEL > 0)
