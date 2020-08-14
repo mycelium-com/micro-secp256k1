@@ -77,37 +77,37 @@ void uECC_vli_modSub(uECC_word_t *result,
                      wordcount_t num_words);
 
 /* Computes result = product % mod, where product is 2N words long.
-   Currently only designed to work for mod == curve->p or curve_n. */
+   Currently only designed to work for mod == curve_secp256k1.p or curve_n. */
 void uECC_vli_mmod(uECC_word_t *result,
                    uECC_word_t *product,
                    const uECC_word_t *mod,
                    wordcount_t num_words);
 
-/* Calculates result = product (mod curve->p), where product is up to
-   2 * curve->num_words long. */
+/* Calculates result = product (mod curve_secp256k1.p), where product is up to
+   2 * curve_secp256k1.num_words long. */
 void uECC_vli_mmod_fast(uECC_word_t *result, uECC_word_t *product);
 
 /* Computes result = (left * right) % mod.
-   Currently only designed to work for mod == curve->p or curve_n. */
+   Currently only designed to work for mod == curve_secp256k1.p or curve_n. */
 void uECC_vli_modMult(uECC_word_t *result,
                       const uECC_word_t *left,
                       const uECC_word_t *right,
                       const uECC_word_t *mod,
                       wordcount_t num_words);
 
-/* Computes result = (left * right) % curve->p. */
+/* Computes result = (left * right) % curve_secp256k1.p. */
 void uECC_vli_modMult_fast(uECC_word_t *result,
                            const uECC_word_t *left,
                            const uECC_word_t *right);
 
 /* Computes result = left^2 % mod.
-   Currently only designed to work for mod == curve->p or curve_n. */
+   Currently only designed to work for mod == curve_secp256k1.p or curve_n. */
 void uECC_vli_modSquare(uECC_word_t *result,
                         const uECC_word_t *left,
                         const uECC_word_t *mod,
                         wordcount_t num_words);
 
-/* Computes result = left^2 % curve->p. */
+/* Computes result = left^2 % curve_secp256k1.p. */
 void uECC_vli_modSquare_fast(uECC_word_t *result, const uECC_word_t *left);
 
 /* Computes result = (1 / input) % mod.*/
@@ -116,7 +116,7 @@ void uECC_vli_modInv(uECC_word_t *result,
                      const uECC_word_t *mod,
                      wordcount_t num_words);
 
-/* Calculates a = sqrt(a) (mod curve->p) */
+/* Calculates a = sqrt(a) (mod curve_secp256k1.p) */
 void uECC_vli_mod_sqrt(uECC_word_t *a);
 
 /* Converts an integer in uECC native format to big-endian bytes. */
@@ -139,8 +139,8 @@ const uECC_word_t *uECC_curve_b();
 int uECC_valid_point(const uECC_word_t *point);
 
 /* Multiplies a point by a scalar. Points are represented by the X coordinate followed by
-   the Y coordinate in the same array, both coordinates are curve->num_words long. Note
-   that scalar must be curve->num_n_words long (NOT curve->num_words). */
+   the Y coordinate in the same array, both coordinates are curve_secp256k1.num_words long. Note
+   that scalar must be curve_secp256k1.num_n_words long (NOT curve_secp256k1.num_words). */
 void uECC_point_mult(uECC_word_t *result,
                      const uECC_word_t *point,
                      const uECC_word_t *scalar);

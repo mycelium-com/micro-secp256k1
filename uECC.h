@@ -40,7 +40,7 @@ faster somewhat faster, but increases the code size. */
 
 struct uECC_Curve_t;
 typedef const struct uECC_Curve_t * uECC_Curve;
-uECC_Curve curve;
+extern const struct uECC_Curve_t curve_secp256k1;
 
 #ifdef __cplusplus
 extern "C"
