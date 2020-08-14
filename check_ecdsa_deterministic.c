@@ -5,42 +5,22 @@
 #include <stdio.h>
 #include <string.h>
 #include <openssl/bn.h>
+#include <openssl/sha.h>
+#include <openssl/hmac.h>
 #include <openssl/evp.h>
 #include <openssl/ecdsa.h>
 
-#define SHA256_BLOCK_LENGTH  64
-#define SHA256_DIGEST_LENGTH 32
-
-typedef struct SHA256_CTX {
-	uint32_t	state[8];
-	uint64_t	bitcount;
-	uint8_t	buffer[SHA256_BLOCK_LENGTH];
-} SHA256_CTX;
-
-extern void SHA256_Init(SHA256_CTX *ctx);
-extern void SHA256_Update(SHA256_CTX *ctx, const uint8_t *message, size_t message_size);
-extern void SHA256_Final(uint8_t digest[SHA256_DIGEST_LENGTH], SHA256_CTX *ctx);
-
-typedef struct SHA256_HashContext {
-    uECC_HashContext uECC;
-    SHA256_CTX ctx;
-} SHA256_HashContext;
-
-static void init_SHA256(const uECC_HashContext *base) {
-    SHA256_HashContext *context = (SHA256_HashContext *)base;
-    SHA256_Init(&context->ctx);
+static void init_HMAC(const struct uECC_HashContext *base, const uint8_t *key, int key_len) {
+    HMAC_Init((HMAC_CTX *)base->ctx, key, key_len, EVP_sha256());
 }
 
-static void update_SHA256(const uECC_HashContext *base,
-                          const uint8_t *message,
-                          unsigned message_size) {
-    SHA256_HashContext *context = (SHA256_HashContext *)base;
-    SHA256_Update(&context->ctx, message, message_size);
+static void update_HMAC(const struct uECC_HashContext *base, const uint8_t *data, int len) {
+    HMAC_Update((HMAC_CTX *)base->ctx, data, len);
 }
 
-static void finish_SHA256(const uECC_HashContext *base, uint8_t *hash_result) {
-    SHA256_HashContext *context = (SHA256_HashContext *)base;
-    SHA256_Final(hash_result, &context->ctx);
+static void finish_HMAC(const struct uECC_HashContext *base, uint8_t *digest) {
+    uint32_t len;
+    HMAC_Final((HMAC_CTX *) base->ctx, digest, &len);
 }
 
 int main() {
@@ -55,15 +35,16 @@ int main() {
     uint8_t serialized[70] = {0};
     const uint8_t *pser = &serialized[0];
 
-    uint8_t tmp[2 * SHA256_DIGEST_LENGTH + SHA256_BLOCK_LENGTH];
-    SHA256_HashContext ctx = {{
-        &init_SHA256,
-        &update_SHA256,
-        &finish_SHA256,
-        SHA256_BLOCK_LENGTH,
+    uint8_t tmp[2 * SHA256_DIGEST_LENGTH + 1];
+    HMAC_CTX hmac_ctx;
+    uECC_HashContext ctx = {
+        &init_HMAC,
+        &update_HMAC,
+        &finish_HMAC,
+        &hmac_ctx,
         SHA256_DIGEST_LENGTH,
         tmp
-    }};
+    };
 
     if (!uECC_compute_public_key(private, public + 1)) {
         printf("uECC_make_key() failed\n");
@@ -77,7 +58,7 @@ int main() {
     }
     printf("\n");
 
-    if (!uECC_sign_deterministic(private, hash, sizeof(hash), &ctx.uECC, sig)) {
+    if (!uECC_sign_deterministic(private, hash, sizeof(hash), &ctx, sig)) {
         printf("uECC_sign_deterministic() failed\n");
         return 1;
     }

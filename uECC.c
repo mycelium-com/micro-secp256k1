@@ -1136,49 +1136,14 @@ static int uECC_sign_with_k(const uint8_t *private_key,
     return 1;
 }
 
-/* Compute an HMAC using K as a key (as in RFC 6979). Note that K is always
+/* Compute an HMAC using K as a key. Note that K is always
    the same size as the hash result size. */
-static void HMAC_init(const uECC_HashContext *hash_context, const uint8_t *K) {
-    uint8_t *pad = hash_context->tmp + 2 * hash_context->result_size;
-    unsigned i;
-    for (i = 0; i < hash_context->result_size; ++i)
-        pad[i] = K[i] ^ 0x36;
-    for (; i < hash_context->block_size; ++i)
-        pad[i] = 0x36;
-
-    hash_context->init_hash(hash_context);
-    hash_context->update_hash(hash_context, pad, hash_context->block_size);
-}
-
-static void HMAC_update(const uECC_HashContext *hash_context,
-                        const uint8_t *message,
-                        unsigned message_size) {
-    hash_context->update_hash(hash_context, message, message_size);
-}
-
-static void HMAC_finish(const uECC_HashContext *hash_context,
-                        const uint8_t *K,
-                        uint8_t *result) {
-    uint8_t *pad = hash_context->tmp + 2 * hash_context->result_size;
-    unsigned i;
-    for (i = 0; i < hash_context->result_size; ++i)
-        pad[i] = K[i] ^ 0x5c;
-    for (; i < hash_context->block_size; ++i)
-        pad[i] = 0x5c;
-
-    hash_context->finish_hash(hash_context, result);
-
-    hash_context->init_hash(hash_context);
-    hash_context->update_hash(hash_context, pad, hash_context->block_size);
-    hash_context->update_hash(hash_context, result, hash_context->result_size);
-    hash_context->finish_hash(hash_context, result);
-}
 
 /* V = HMAC_K(V) */
 static void update_V(const uECC_HashContext *hash_context, uint8_t *K, uint8_t *V) {
-    HMAC_init(hash_context, K);
-    HMAC_update(hash_context, V, hash_context->result_size);
-    HMAC_finish(hash_context, K, V);
+    hash_context->hmac_init(hash_context, K, hash_context->digest_size);
+    hash_context->hmac_update(hash_context, V, hash_context->digest_size);
+    hash_context->hmac_finish(hash_context, V);
 }
 
 /* Deterministic signing, similar to RFC 6979. Differences are:
@@ -1186,41 +1151,41 @@ static void update_V(const uECC_HashContext *hash_context, uint8_t *K, uint8_t *
       (it is not reduced modulo curve_n).
     * We generate a value for k (aka T) directly rather than converting endianness.
 
-   Layout of hash_context->tmp: <K> | <V> | (1 byte overlapped 0x00 or 0x01) / <HMAC pad> */
+   Layout of hash_context->tmp: <K> | <V> | (1 byte overlapped 0x00 or 0x01) */
 int uECC_sign_deterministic(const uint8_t *private_key,
                             const uint8_t *message_hash,
                             unsigned hash_size,
                             const uECC_HashContext *hash_context,
                             uint8_t *signature) {
     uint8_t *K = hash_context->tmp;
-    uint8_t *V = K + hash_context->result_size;
+    uint8_t *V = K + hash_context->digest_size;
     wordcount_t num_bytes = curve_secp256k1.num_bytes;
     wordcount_t num_n_words = BITS_TO_WORDS(curve_secp256k1.num_n_bits);
     bitcount_t num_n_bits = curve_secp256k1.num_n_bits;
     uECC_word_t tries;
     unsigned i;
-    for (i = 0; i < hash_context->result_size; ++i) {
+    for (i = 0; i < hash_context->digest_size; ++i) {
         V[i] = 0x01;
         K[i] = 0;
     }
 
     /* K = HMAC_K(V || 0x00 || int2octets(x) || h(m)) */
-    HMAC_init(hash_context, K);
-    V[hash_context->result_size] = 0x00;
-    HMAC_update(hash_context, V, hash_context->result_size + 1);
-    HMAC_update(hash_context, private_key, num_bytes);
-    HMAC_update(hash_context, message_hash, hash_size);
-    HMAC_finish(hash_context, K, K);
+    hash_context->hmac_init(hash_context, K, hash_context->digest_size);
+    V[hash_context->digest_size] = 0x00;
+    hash_context->hmac_update(hash_context, V, hash_context->digest_size + 1);
+    hash_context->hmac_update(hash_context, private_key, num_bytes);
+    hash_context->hmac_update(hash_context, message_hash, hash_size);
+    hash_context->hmac_finish(hash_context, K);
 
     update_V(hash_context, K, V);
 
     /* K = HMAC_K(V || 0x01 || int2octets(x) || h(m)) */
-    HMAC_init(hash_context, K);
-    V[hash_context->result_size] = 0x01;
-    HMAC_update(hash_context, V, hash_context->result_size + 1);
-    HMAC_update(hash_context, private_key, num_bytes);
-    HMAC_update(hash_context, message_hash, hash_size);
-    HMAC_finish(hash_context, K, K);
+    hash_context->hmac_init(hash_context, K, hash_context->digest_size);
+    V[hash_context->digest_size] = 0x01;
+    hash_context->hmac_update(hash_context, V, hash_context->digest_size + 1);
+    hash_context->hmac_update(hash_context, private_key, num_bytes);
+    hash_context->hmac_update(hash_context, message_hash, hash_size);
+    hash_context->hmac_finish(hash_context, K);
 
     update_V(hash_context, K, V);
 
@@ -1230,7 +1195,7 @@ int uECC_sign_deterministic(const uint8_t *private_key,
         wordcount_t T_bytes = 0;
         for (;;) {
             update_V(hash_context, K, V);
-            for (i = 0; i < hash_context->result_size; ++i) {
+            for (i = 0; i < hash_context->digest_size; ++i) {
                 T_ptr[T_bytes++] = V[i];
                 if (T_bytes >= num_n_words * uECC_WORD_SIZE) {
                     goto filled;
@@ -1249,10 +1214,10 @@ int uECC_sign_deterministic(const uint8_t *private_key,
         }
 
         /* K = HMAC_K(V || 0x00) */
-        HMAC_init(hash_context, K);
-        V[hash_context->result_size] = 0x00;
-        HMAC_update(hash_context, V, hash_context->result_size + 1);
-        HMAC_finish(hash_context, K, K);
+        hash_context->hmac_init(hash_context, K, hash_context->digest_size);
+        V[hash_context->digest_size] = 0x00;
+        hash_context->hmac_update(hash_context, V, hash_context->digest_size + 1);
+        hash_context->hmac_finish(hash_context, K);
 
         update_V(hash_context, K, V);
     }

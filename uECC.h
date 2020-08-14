@@ -113,50 +113,45 @@ int uECC_compute_public_key(const uint8_t *private_key, uint8_t *public_key);
 /* uECC_HashContext structure.
 This is used to pass in an arbitrary hash function to uECC_sign_deterministic().
 The structure will be used for multiple hash computations; each time a new hash
-is computed, init_hash() will be called, followed by one or more calls to
-update_hash(), and finally a call to finish_hash() to produce the resulting hash.
+is computed, init_hmac() will be called, followed by one or more calls to
+update_hmac(), and finally a call to finish_hmac) to produce the resulting hash.
 
 The intention is that you will create a structure that includes uECC_HashContext
 followed by any hash-specific data. For example:
 
-typedef struct SHA256_HashContext {
-    uECC_HashContext uECC;
-    SHA256_CTX ctx;
-} SHA256_HashContext;
-
-void init_SHA256(uECC_HashContext *base) {
-    SHA256_HashContext *context = (SHA256_HashContext *)base;
-    SHA256_Init(&context->ctx);
+static void init_HMAC(void *ctx, const uint8_t *key, int key_len) {
+    HMAC_Init((HMAC_CTX *)ctx, key, key_len, EVP_sha256());
 }
 
-void update_SHA256(uECC_HashContext *base,
-                   const uint8_t *message,
-                   unsigned message_size) {
-    SHA256_HashContext *context = (SHA256_HashContext *)base;
-    SHA256_Update(&context->ctx, message, message_size);
+static void update_HMAC(void *ctx, const uint8_t *data, int len) {
+    HMAC_Update((HMAC_CTX *)ctx, data, len);
 }
 
-void finish_SHA256(uECC_HashContext *base, uint8_t *hash_result) {
-    SHA256_HashContext *context = (SHA256_HashContext *)base;
-    SHA256_Final(hash_result, &context->ctx);
+static void finish_HMAC(void *ctx, uint8_t *digest) {
+    uint32_t len;
+    HMAC_Final((HMAC_CTX *) ctx, digest, &len);
 }
 
 ... when signing ...
 {
-    uint8_t tmp[32 + 32 + 64];
-    SHA256_HashContext ctx = {{&init_SHA256, &update_SHA256, &finish_SHA256, 64, 32, tmp}};
-    uECC_sign_deterministic(key, message_hash, &ctx.uECC, signature);
+    HMAC_CTX hmac_ctx;
+    uECC_HashContext ctx = {{
+        &init_HMAC,
+        &update_HMAC,
+        &finish_HMAC,
+        &hmac_ctx,
+        SHA256_DIGEST_SIZE
+    }};
+    uECC_sign_deterministic(key, message_hash, &ctx, signature);
 }
 */
 typedef struct uECC_HashContext {
-    void (*init_hash)(const struct uECC_HashContext *context);
-    void (*update_hash)(const struct uECC_HashContext *context,
-                        const uint8_t *message,
-                        unsigned message_size);
-    void (*finish_hash)(const struct uECC_HashContext *context, uint8_t *hash_result);
-    unsigned block_size; /* Hash function block size in bytes, eg 64 for SHA-256. */
-    unsigned result_size; /* Hash function result size in bytes, eg 32 for SHA-256. */
-    uint8_t *tmp; /* Must point to a buffer of at least (2 * result_size + block_size) bytes. */
+    void (*hmac_init)(const struct uECC_HashContext *context, const uint8_t *key, int key_size);
+    void (*hmac_update)(const struct uECC_HashContext *context, const uint8_t *message, int message_size);
+    void (*hmac_finish)(const struct uECC_HashContext *context, uint8_t *hash_result);
+    void *ctx;
+    int digest_size;
+    uint8_t *tmp;
 } uECC_HashContext;
 
 /* uECC_sign_deterministic() function.
