@@ -2,7 +2,6 @@
 
 #include "uECC.h"
 #include "uECC_vli.h"
-#include <string.h>
 
 #ifndef uECC_RNG_MAX_TRIES
     #define uECC_RNG_MAX_TRIES 64
@@ -112,7 +111,6 @@ struct uECC_Curve_t {
 #endif
 };
 
-#if uECC_VLI_NATIVE_LITTLE_ENDIAN
 static void bcopy(uint8_t *dst,
                   const uint8_t *src,
                   unsigned num_bytes) {
@@ -121,7 +119,6 @@ static void bcopy(uint8_t *dst,
         dst[num_bytes] = src[num_bytes];
     }
 }
-#endif
 
 static cmpresult_t uECC_vli_cmp_unsafe(const uECC_word_t *left,
                                        const uECC_word_t *right,
@@ -1365,10 +1362,10 @@ void uECC_compact_to_der(const uint8_t *compact, uint8_t *der, uECC_Curve curve)
     der[1] = 4 + lenS + lenR;
     der[2] = 0x02;
     der[3] = lenR;
-    memcpy(der+4, rp, lenR);
+    bcopy(der+4, rp, lenR);
     der[4+lenR] = 0x02;
     der[5+lenR] = lenS;
-    memcpy(der+lenR+6, sp, lenS);
+    bcopy(der+lenR+6, sp, lenS);
 }
 
 /* Based on parse_der_lax routine from bitcoin distribution */
@@ -1481,7 +1478,7 @@ int uECC_der_to_compact(const uint8_t *input, unsigned inputlen, uint8_t *compac
         /* Overflow */
         return 0;
     } else {
-        memcpy(compact + 32 - rlen, input + rpos, rlen);
+        bcopy(compact + 32 - rlen, input + rpos, rlen);
     }
 
     /* Ignore leading zeroes in S */
@@ -1494,7 +1491,7 @@ int uECC_der_to_compact(const uint8_t *input, unsigned inputlen, uint8_t *compac
         /* Overflow */
         return 0;
     } else {
-        memcpy(compact + 64 - slen, input + spos, slen);
+        bcopy(compact + 64 - slen, input + spos, slen);
     }
 
     return 1;

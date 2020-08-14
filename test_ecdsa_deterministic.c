@@ -83,14 +83,14 @@ int main() {
         uECC_compact_to_der(sig, serialized, curve);
 
 /*
-        printf("DER:\n");
+        printf("DER sig:\n");
         for (int j = 0; j < 70; ++j) {
             printf("%02x", serialized[j]);
         }
         printf("\n");
 
 
-        printf("CPT:\n");
+        printf("CPT sig:\n");
         for (int j = 0; j < 64; ++j) {
             printf("%02x", sig[j]);
         }
