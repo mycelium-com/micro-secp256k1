@@ -73,14 +73,31 @@ int main() {
     }
     memcpy(hash, public, sizeof(hash));
 
+    printf("pubkey long:\n");
+    for (int j = 0; j < 65; ++j) {
+        printf("%02x", public[j]);
+    }
+    printf("\n");
+
     if (!uECC_sign_deterministic(private, hash, sizeof(hash), &ctx.uECC, sig, curve)) {
         printf("uECC_sign_deterministic() failed\n");
         return 1;
     }
 
-
     // Serialize
     uECC_compact_to_der(sig, serialized, curve);
+
+    printf("DER sig:\n");
+    for (int j = 0; j < 70; ++j) {
+        printf("%02x", serialized[j]);
+    }
+    printf("\n");
+
+    printf("CPT sig:\n");
+    for (int j = 0; j < 64; ++j) {
+        printf("%02x", sig[j]);
+    }
+    printf("\n");
 
     // Deserialize
     ECDSA_SIG *ossl_sig = ECDSA_SIG_new();
@@ -104,7 +121,13 @@ int main() {
 
     // Compressed pubkey
     uECC_compress(public + 1, public_c, curve);
-    
+
+    printf("pubkey short:\n");
+    for (int j = 0; j < 33; ++j) {
+        printf("%02x", public_c[j]);
+    }
+    printf("\n");
+
     EC_KEY *pkey_c = EC_KEY_new_by_curve_name(NID_secp256k1);
     if (!pkey) {
         printf("EC_KEY_new() failed\n");
