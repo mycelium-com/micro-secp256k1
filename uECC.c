@@ -1342,11 +1342,6 @@ int uECC_der_to_compact(const uint8_t *input, unsigned inputlen, uint8_t *compac
     }
     spos = pos;
 
-    /* Ignore leading zeroes in R */
-    while (rlen > 0 && input[rpos] == 0) {
-        rlen--;
-        rpos++;
-    }
     /* Copy R value */
     if (rlen > 32) {
         /* Overflow */
@@ -1355,11 +1350,6 @@ int uECC_der_to_compact(const uint8_t *input, unsigned inputlen, uint8_t *compac
         bcopy(compact + 32 - rlen, input + rpos, rlen);
     }
 
-    /* Ignore leading zeroes in S */
-    while (slen > 0 && input[spos] == 0) {
-        slen--;
-        spos++;
-    }
     /* Copy S value */
     if (slen > 32) {
         /* Overflow */
