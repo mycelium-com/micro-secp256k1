@@ -948,11 +948,10 @@ int uECC_valid_public_key(const uint8_t *public_key) {
 }
 
 int uECC_public_point_tweak(uint8_t *result, const uint8_t *public_key, const uint8_t *scalar) {
-    uECC_word_t _public[uECC_MAX_WORDS * 2];
-    uECC_word_t _result[uECC_MAX_WORDS * 2];
-    uECC_word_t _scalar[uECC_MAX_WORDS];
-
-    uECC_word_t _s_mul_G[uECC_MAX_WORDS * 2];
+    uECC_word_t _public[uECC_MAX_WORDS * 2] = {0};
+    uECC_word_t _result[uECC_MAX_WORDS * 2] = {0};
+    uECC_word_t _scalar[uECC_MAX_WORDS] = {0};
+    uECC_word_t _s_mul_G[uECC_MAX_WORDS * 2] = {0};
 
     uECC_vli_bytesToNative(_public, public_key, curve_secp256k1.num_bytes);
     uECC_vli_bytesToNative(_public + curve_secp256k1.num_words, public_key + curve_secp256k1.num_bytes, curve_secp256k1.num_bytes);
@@ -963,8 +962,11 @@ int uECC_public_point_tweak(uint8_t *result, const uint8_t *public_key, const ui
         return 0;
     }
 
-    /* scalar*G */
-    uECC_point_mult(_s_mul_G, curve_secp256k1.G, _scalar);
+    /* Public key is computed by pultiplication i.e. scalar*G whis is what we need */
+    if (!EccPoint_compute_public_key(_s_mul_G, _scalar)) {
+        return 0;
+    }
+    
     /* R = A + scalar*G */
     EccPoint_add(_result, _public, _s_mul_G);
 
@@ -973,10 +975,10 @@ int uECC_public_point_tweak(uint8_t *result, const uint8_t *public_key, const ui
         return 0;
     }
 
-    uECC_vli_bytesToNative(_result, result, curve_secp256k1.num_bytes);
-    uECC_vli_bytesToNative(_result + curve_secp256k1.num_words, result + curve_secp256k1.num_bytes, curve_secp256k1.num_bytes);
+    uECC_vli_nativeToBytes(result, curve_secp256k1.num_bytes, _result);
+    uECC_vli_nativeToBytes(result + curve_secp256k1.num_bytes, curve_secp256k1.num_bytes, _result + curve_secp256k1.num_words);
 
-    return 0;
+    return 1;
 }
 
 int uECC_private_scalar_tweak(uint8_t *result, const uint8_t *private_key, const uint8_t *scalar) {
@@ -1526,34 +1528,29 @@ void uECC_point_mult(uECC_word_t *result,
 }
 
 /* ECC Point Addition R = P + Q */
-void EccPoint_add(uECC_word_t *R, const uECC_word_t *P, const uECC_word_t *Q) {
-    uECC_word_t Px[uECC_MAX_WORDS];
-    uECC_word_t Py[uECC_MAX_WORDS];
-    uECC_word_t Qx[uECC_MAX_WORDS];
-    uECC_word_t Qy[uECC_MAX_WORDS];
+void EccPoint_add(uECC_word_t *R, const uECC_word_t *input_P, const uECC_word_t *input_Q){
+    uECC_word_t P[uECC_MAX_WORDS * 2];
+    uECC_word_t Q[uECC_MAX_WORDS * 2];
+    uECC_word_t z[uECC_MAX_WORDS];
 
     wordcount_t num_words = curve_secp256k1.num_words;
 
-    uECC_vli_set(Px, P, num_words);
-    uECC_vli_set(Py, P + num_words, num_words);
+    uECC_vli_set(P, input_P, num_words);
+    uECC_vli_set(P + num_words, input_P + num_words, num_words);
+    uECC_vli_set(Q, input_Q, num_words);
+    uECC_vli_set(Q + num_words, input_Q + num_words, num_words);
 
-    uECC_vli_set(Qx, Q, num_words);
-    uECC_vli_set(Qy, Q + num_words, num_words);
-
-
-    XYcZ_add(Px, Py, Qx, Qy);
+    XYcZ_add(P, P + num_words, Q, Q + num_words);
 
     /* Find final 1/Z value. */
-    uECC_word_t z[uECC_MAX_WORDS];
-    uECC_vli_modMult_fast(z, Px, Py);
+    uECC_vli_modMult_fast(z, input_P, P + num_words);
     uECC_vli_modInv(z, z, curve_secp256k1.p, num_words);
-    
-    uECC_vli_modMult_fast(z, z, Px);
-    uECC_vli_modMult_fast(z, z, Py);
+    uECC_vli_modMult_fast(z, z, P);
+    uECC_vli_modMult_fast(z, z, input_P + num_words);
     /* End 1/Z calculation */
 
-    apply_z(Qx, Qy, z);
+    apply_z(Q, Q + num_words, z);
 
-    uECC_vli_set(R, Qx, num_words);
-    uECC_vli_set(R, Qy + num_words, num_words);
+    uECC_vli_set(R, Q, num_words);
+    uECC_vli_set(R + num_words, Q + num_words, num_words);
 }
