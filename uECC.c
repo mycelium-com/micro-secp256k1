@@ -1012,7 +1012,7 @@ int uECC_private_scalar_tweak(uint8_t *result, const uint8_t *private_key, const
 
     uECC_vli_nativeToBytes(result, curve_secp256k1.num_bytes, _result);
 
-    return 0;
+    return 1;
 }
 
 int uECC_compute_public_key(const uint8_t *private_key, uint8_t *public_key) {
