@@ -998,6 +998,15 @@ int uECC_private_scalar_tweak(uint8_t *result, const uint8_t *private_key, const
         return 0;
     }
 
+    /* Make sure that scalar is in the range [1, n-1] */
+    if (uECC_vli_isZero(_scalar, BITS_TO_WORDS(curve_secp256k1.num_n_bits))) {
+        return 0;
+    }
+
+    if (uECC_vli_cmp(curve_secp256k1.n, _scalar, BITS_TO_WORDS(curve_secp256k1.num_n_bits)) != 1) {
+        return 0;
+    }
+
     /* Apply scalar addition
        r = a + scalar
     */
