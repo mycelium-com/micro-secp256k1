@@ -1013,11 +1013,11 @@ int uECC_private_scalar_tweak(uint8_t *result, const uint8_t *private_key, const
     uECC_vli_modAdd(_result, _private, _scalar, curve_secp256k1.n, BITS_TO_WORDS(curve_secp256k1.num_n_bits));
 
     /* Check again that the new private key is in the range [1, n-1]. */
-    if (uECC_vli_isZero(_private, BITS_TO_WORDS(curve_secp256k1.num_n_bits))) {
+    if (uECC_vli_isZero(_result, BITS_TO_WORDS(curve_secp256k1.num_n_bits))) {
         return 0;
     }
 
-    if (uECC_vli_cmp(curve_secp256k1.n, _private, BITS_TO_WORDS(curve_secp256k1.num_n_bits)) != 1) {
+    if (uECC_vli_cmp(curve_secp256k1.n, _result, BITS_TO_WORDS(curve_secp256k1.num_n_bits)) != 1) {
         return 0;
     }
 
