@@ -97,6 +97,19 @@ Returns 1 if the public key is valid, 0 if it is invalid.
 */
 int uECC_valid_public_key(const uint8_t *public_key);
 
+/* uECC_valid_private_key() function.
+Check to see if a private key is valid.
+
+Note that you are not required to check for a valid private key before using any other uECC
+functions.
+
+Inputs:
+    private_key - The private key to check.
+
+Returns 1 if the private key is valid, 0 if it is invalid.
+*/
+int uECC_valid_private_key(const uint8_t *private_key);
+
 /* uECC_compute_public_key() function.
 Compute the corresponding public key for a private key.
 

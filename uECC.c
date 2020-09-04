@@ -947,6 +947,22 @@ int uECC_valid_public_key(const uint8_t *public_key) {
     return uECC_valid_point(_public);
 }
 
+int uECC_valid_private_key(const uint8_t *private_key) {
+    uECC_word_t _private[uECC_MAX_WORDS];
+    uECC_vli_bytesToNative(_private, private_key, BITS_TO_BYTES(curve_secp256k1.num_n_bits));
+
+    /* Make sure the private key is in the range [1, n-1]. */
+    if (uECC_vli_isZero(_private, BITS_TO_WORDS(curve_secp256k1.num_n_bits))) {
+        return 0;
+    }
+
+    if (uECC_vli_cmp(curve_secp256k1.n, _private, BITS_TO_WORDS(curve_secp256k1.num_n_bits)) != 1) {
+        return 0;
+    }
+
+    return 1;
+}
+
 int uECC_public_point_tweak(uint8_t *result, const uint8_t *public_key, const uint8_t *scalar) {
     uECC_word_t _public[uECC_MAX_WORDS * 2] = {0};
     uECC_word_t _result[uECC_MAX_WORDS * 2] = {0};
@@ -962,7 +978,7 @@ int uECC_public_point_tweak(uint8_t *result, const uint8_t *public_key, const ui
         return 0;
     }
 
-    /* Public key is computed by pultiplication i.e. scalar*G whis is what we need */
+    /* Public key is computed by multiplication i.e. scalar*G whis is what we need */
     if (!EccPoint_compute_public_key(_s_mul_G, _scalar)) {
         return 0;
     }
