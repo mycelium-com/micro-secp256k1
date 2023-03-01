@@ -59,6 +59,22 @@ Returns the size of a public key for the curve in bytes.
 */
 int uECC_curve_public_key_size();
 
+/* uECC_shared_secret() function.
+Compute a shared secret given your secret key and someone else's public key. If the public key
+is not from a trusted source and has not been previously verified, you should verify it first
+using uECC_valid_public_key().
+Note: It is recommended that you hash the result of uECC_shared_secret() before using it for
+symmetric encryption or HMAC.
+Inputs:
+    public_key  - The public key of the remote party.
+    private_key - Your private key.
+Outputs:
+    secret - Will be filled in with the shared secret value. Must be the same size as the
+             curve size; for example, if the curve is secp256r1, secret must be 32 bytes long.
+Returns 1 if the shared secret was generated successfully, 0 if an error occurred.
+*/
+int uECC_shared_secret(const uint8_t *public_key, const uint8_t *private_key, uint8_t *secret);
+
 /* uECC_compress() function.
 Compress a public key.
 
